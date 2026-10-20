@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Connect earphone: picture steps counted with dots, one big connect button, speed badge. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="18dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="18dp">
+        <FrameLayout android:id="@+id/back" style="@style/Sunai.Back">
+            <ImageView android:layout_width="32dp" android:layout_height="32dp"
+                android:layout_gravity="center" android:importantForAccessibility="no"
+                android:src="@drawable/ic_back" android:tint="@color/ink" />
+        </FrameLayout>
+        <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+        <include layout="@layout/voice_button" />
+    </LinearLayout>
+
+    <!-- Phone ··· Bluetooth ··· earphone -->
+    <LinearLayout
+        style="@style/Sunai.Card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="18dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="18dp"
+        android:gravity="center_vertical"
+        android:importantForAccessibility="no"
+        android:orientation="horizontal"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp">
+        <ImageView android:layout_width="72dp" android:layout_height="72dp"
+            android:src="@drawable/ic_phone" android:tint="@color/ink" />
+        <LinearLayout android:id="@+id/dots_left" android:layout_width="0dp"
+            android:layout_height="wrap_content" android:layout_weight="1"
+            android:gravity="center" android:orientation="horizontal" />
+        <FrameLayout android:id="@+id/bt_badge" android:layout_width="56dp" android:layout_height="56dp">
+            <ImageView android:layout_width="30dp" android:layout_height="30dp"
+                android:layout_gravity="center" android:src="@drawable/ic_bluetooth"
+                android:tint="@color/white" />
+        </FrameLayout>
+        <LinearLayout android:id="@+id/dots_right" android:layout_width="0dp"
+            android:layout_height="wrap_content" android:layout_weight="1"
+            android:gravity="center" android:orientation="horizontal" />
+        <ImageView android:layout_width="72dp" android:layout_height="72dp"
+            android:src="@drawable/ic_earbud" android:tint="@color/ink" />
+    </LinearLayout>
+
+    <!-- Three picture steps: ● / ●● / ●●● -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="13dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginEnd="13dp"
+        android:orientation="horizontal">
+
+        <LinearLayout style="@style/Sunai.Tile" android:layout_height="wrap_content"
+            android:background="@drawable/bg_card" android:clickable="false"
+            android:paddingTop="12dp" android:paddingBottom="12dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:importantForAccessibility="no" android:text="●" android:textSize="12sp" />
+            <ImageView android:layout_width="46dp" android:layout_height="46dp" android:layout_marginTop="6dp"
+                android:importantForAccessibility="no" android:src="@drawable/ic_case" android:tint="@color/ink" />
+            <TextView style="@style/Sunai.Word" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:layout_marginTop="6dp"
+                android:text="@string/step_open_case" android:textSize="14sp" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/Sunai.Tile" android:layout_height="wrap_content"
+            android:background="@drawable/bg_card" android:clickable="false"
+            android:paddingTop="12dp" android:paddingBottom="12dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:importantForAccessibility="no" android:text="● ●" android:textSize="12sp" />
+            <ImageView android:layout_width="46dp" android:layout_height="46dp" android:layout_marginTop="6dp"
+                android:importantForAccessibility="no" android:src="@drawable/ic_bt_circle" android:tint="@color/blue" />
+            <TextView style="@style/Sunai.Word" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:layout_marginTop="6dp"
+                android:text="@string/step_press_blue" android:textSize="14sp" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/Sunai.Tile" android:layout_height="wrap_content"
+            android:background="@drawable/bg_card" android:clickable="false"
+            android:paddingTop="12dp" android:paddingBottom="12dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:importantForAccessibility="no" android:text="● ● ●" android:textSize="12sp" />
+            <ImageView android:layout_width="46dp" android:layout_height="46dp" android:layout_marginTop="6dp"
+                android:importantForAccessibility="no" android:src="@drawable/ic_ear_in" android:tint="@color/green" />
+            <TextView style="@style/Sunai.Word" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:layout_marginTop="6dp"
+                android:text="@string/step_wear" android:textSize="14sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Big connect button -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical">
+        <FrameLayout
+            android:id="@+id/connect_btn"
+            android:layout_width="170dp"
+            android:layout_height="170dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="@string/connect_btn">
+            <ImageView android:id="@+id/connect_icon" android:layout_width="70dp"
+                android:layout_height="70dp" android:layout_gravity="center"
+                android:importantForAccessibility="no" android:tint="@color/white" />
+        </FrameLayout>
+        <TextView android:id="@+id/connect_word" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:layout_marginTop="12dp"
+            android:textSize="22sp" android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Speed: ⚡ fast or ⏳ slow (only when connected) -->
+    <LinearLayout
+        android:id="@+id/speed_card"
+        style="@style/Sunai.Card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="18dp"
+        android:layout_marginEnd="18dp"
+        android:layout_marginBottom="14dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone">
+        <FrameLayout android:id="@+id/speed_badge" android:layout_width="60dp" android:layout_height="60dp">
+            <ImageView android:id="@+id/speed_icon" android:layout_width="34dp"
+                android:layout_height="34dp" android:layout_gravity="center"
+                android:importantForAccessibility="no" android:tint="@color/white" />
+        </FrameLayout>
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_marginStart="14dp" android:layout_weight="1" android:orientation="vertical">
+            <TextView android:id="@+id/speed_word" style="@style/Sunai.Title"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            <TextView android:id="@+id/speed_hint" style="@style/Sunai.Sub"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Wired earphones are the fastest -->
+    <LinearLayout
+        android:id="@+id/wired_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="18dp"
+        android:layout_marginEnd="18dp"
+        android:layout_marginBottom="20dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp">
+        <ImageView android:layout_width="40dp" android:layout_height="40dp"
+            android:importantForAccessibility="no" android:src="@drawable/ic_wired"
+            android:tint="@color/green_text" />
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_marginStart="12dp" android:layout_weight="1"
+            android:text="@string/wired_best" android:textColor="@color/green_text"
+            android:textSize="15sp" android:textStyle="bold" />
+        <ImageView android:layout_width="30dp" android:layout_height="30dp"
+            android:importantForAccessibility="no" android:src="@drawable/ic_bolt"
+            android:tint="@color/green" />
+    </LinearLayout>
+</LinearLayout>

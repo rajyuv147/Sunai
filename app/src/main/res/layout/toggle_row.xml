@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One settings row: coloured icon circle, title + subtitle, on/off switch.
+     Icon, colours and texts are filled in by HelperActivity. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="12dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <FrameLayout
+        android:id="@+id/row_icon_bg"
+        android:layout_width="48dp"
+        android:layout_height="48dp">
+        <ImageView
+            android:id="@+id/row_icon"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="8dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+        <TextView android:id="@+id/row_title" style="@style/Sunai.Title"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textSize="16sp" />
+        <TextView android:id="@+id/row_sub" style="@style/Sunai.Sub"
+            android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/row_track"
+        android:layout_width="68dp"
+        android:layout_height="40dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="4dp">
+        <View
+            android:id="@+id/row_knob"
+            android:layout_width="32dp"
+            android:layout_height="32dp" />
+    </FrameLayout>
+</LinearLayout>

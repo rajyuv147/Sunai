@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bottom navigation: three pictures (listen, ear test, helper). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/white"
+    android:orientation="horizontal"
+    android:paddingStart="10dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="10dp"
+    android:paddingBottom="14dp">
+
+    <LinearLayout
+        android:id="@+id/nav_listen"
+        style="@style/Sunai.NavItem"
+        android:contentDescription="@string/nav_listen">
+        <ImageView style="@style/Sunai.NavIcon" android:src="@drawable/ic_ear" />
+        <TextView style="@style/Sunai.NavLabel" android:text="@string/nav_listen" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/nav_test"
+        style="@style/Sunai.NavItem"
+        android:contentDescription="@string/nav_test">
+        <ImageView style="@style/Sunai.NavIcon" android:src="@drawable/ic_ear_check" />
+        <TextView style="@style/Sunai.NavLabel" android:text="@string/nav_test" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/nav_helper"
+        style="@style/Sunai.NavItem"
+        android:contentDescription="@string/nav_helper">
+        <ImageView style="@style/Sunai.NavIcon" android:src="@drawable/ic_helper" />
+        <TextView style="@style/Sunai.NavLabel" android:text="@string/nav_helper" />
+    </LinearLayout>
+</LinearLayout>
