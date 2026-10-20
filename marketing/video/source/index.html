@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="ne">
+<head>
+<meta charset="utf-8">
+<title>Sunai video</title>
+<script src="icons.js"></script>
+<script src="timeline.js"></script>
+<style>
+:root{
+  --green:#15803D;--green-soft:#DCFCE7;--green-ring:#BBF7D0;--green-text:#14532D;
+  --red:#B91C1C;--red-ring:#FECACA;
+  --blue:#1D4ED8;--blue-soft:#DBEAFE;--blue-ring:#93C5FD;
+  --amber:#B45309;--amber-soft:#FEF3C7;--amber-ring:#FDE68A;--amber-text:#78350F;
+  --ink:#0F172A;--muted:#475569;--nav-idle:#334155;--line:#CBD5E1;--track:#E2E8F0;--toggle-off:#94A3B8;
+  --ground:#F1F5F9;--white:#fff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--ground)}
+body{font-family:"Noto Sans Devanagari","Noto Sans",sans-serif;color:var(--ink)}
+#stage{position:absolute;inset:0;overflow:hidden}
+.bg{position:absolute;inset:0;background:linear-gradient(160deg,#F8FAFC 0%,#F1F5F9 55%,#E8EEF5 100%)}
+.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.55}
+.scene{position:absolute;inset:0;opacity:0;display:none}
+.ic{display:inline-block;flex:none}
+.ic svg{width:100%;height:100%;display:block;overflow:visible}
+
+/* left copy */
+.copy{position:absolute;left:150px;top:0;bottom:150px;width:820px;display:flex;flex-direction:column;justify-content:center}
+.kicker{align-self:flex-start;font-size:30px;font-weight:700;padding:8px 26px;border-radius:40px;margin-bottom:26px}
+.h1{font-size:84px;line-height:1.25;font-weight:800;letter-spacing:-.5px}
+.sub{font-size:40px;line-height:1.5;color:var(--muted);margin-top:22px;font-weight:500}
+.chiprow{display:flex;gap:18px;margin-top:38px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:14px;font-size:32px;font-weight:700;padding:14px 26px;border-radius:22px;background:#fff;box-shadow:0 6px 20px rgba(15,23,42,.08)}
+
+/* phone */
+.phone{position:absolute;left:1180px;top:58px;width:396px;height:812px;border-radius:58px;background:#111827;padding:15px;
+  box-shadow:0 40px 80px rgba(15,23,42,.25),0 0 0 2px #374151 inset}
+.phone .notch{position:absolute;top:24px;left:50%;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:#000;z-index:5}
+.screen{width:366px;height:782px;border-radius:44px;overflow:hidden;background:var(--ground);position:relative}
+.dp{position:absolute;left:3px;top:0;width:360px;height:782px;display:flex;flex-direction:column}
+.sbar{height:30px;display:flex;align-items:center;justify-content:space-between;padding:6px 26px 0;font-size:14px;font-weight:700;color:var(--ink)}
+.sbar .r{display:flex;gap:6px;align-items:center}
+.batt{width:24px;height:12px;border:2px solid var(--ink);border-radius:3px;position:relative}
+.batt i{position:absolute;left:1px;top:1px;bottom:1px;width:70%;background:var(--ink);border-radius:1px}
+.sig{display:flex;gap:2px;align-items:flex-end;height:12px}.sig i{width:3px;background:var(--ink);border-radius:1px}
+
+.toprow{display:flex;align-items:center;padding:8px 18px 0}
+.flex1{flex:1}
+.pill{height:56px;border-radius:28px;background:#fff;border:2px solid var(--green);display:flex;align-items:center;padding:0 14px 0 10px;gap:8px}
+.dotc{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.voicebtn{width:76px;height:76px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--amber-soft);border:4px solid var(--amber-soft);color:var(--amber-text);position:relative}
+.voicebtn b{font-size:12px;line-height:1.2}
+.ring{position:absolute;border-radius:50%;border:4px solid var(--amber);pointer-events:none}
+.back{width:64px;height:64px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center}
+
+.center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.big{width:250px;height:250px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:14px solid var(--red-ring);background:#fff}
+.meter{height:34px;margin-top:12px;display:flex;align-items:center}
+.meter i{width:7px;margin:0 2.5px;border-radius:4px;background:var(--line);height:6px}
+.state{font-size:28px;font-weight:800;margin-top:6px;color:var(--red)}
+.card{background:#fff;border-radius:22px;padding:14px}
+.volcard{margin:0 18px;display:flex;align-items:center}
+.vbtn{width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.vbars{flex:1;height:64px;margin:0 12px;display:flex;align-items:flex-end}
+.vbars i{flex:1;margin:0 3px;border-radius:8px;background:var(--track)}
+.places{height:96px;margin:12px 13px 14px;display:flex}
+.tile{flex:1;margin:0 5px;border-radius:22px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink)}
+.tile b{font-size:15px;line-height:1.5}
+.nav{background:#fff;display:flex;padding:8px 10px 14px}
+.navi{flex:1;height:64px;margin:0 4px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--nav-idle)}
+.navi b{font-size:14px;line-height:1.3}
+.navi.on{background:var(--green-soft);color:var(--green-text)}
+
+/* test */
+.ears{height:120px;margin:8px 13px 0;display:flex}
+.ears .tile{border-radius:26px;color:var(--muted)}
+.ears .tile b{font-size:15px}
+.tdots{display:flex;justify-content:center;margin-top:16px}
+.tdots i{width:28px;height:28px;border-radius:50%;margin:0 5px;background:var(--line)}
+.play{width:200px;height:200px;border-radius:50%;border:14px solid var(--blue-soft);background:#fff;display:flex;align-items:center;justify-content:center;color:var(--blue)}
+.yn{height:120px;display:flex;margin:0 18px 20px}
+.yn .tile{margin:0;color:#fff;border-radius:28px}
+.yn .tile b{font-size:18px}
+
+/* connect */
+.chain{margin:8px 18px 0;padding:20px 14px;display:flex;align-items:center}
+.cdots{flex:1;display:flex;justify-content:center}.cdots i{width:8px;height:8px;margin:0 3px;border-radius:50%;background:var(--line)}
+.steps{display:flex;margin:14px 13px 0}
+.steps .tile{padding:12px 0;font-size:12px}
+.steps .tile b{font-size:14px;margin-top:6px}
+.cbtn{width:170px;height:170px;border-radius:50%;background:var(--blue);border:12px solid var(--blue-soft);display:flex;align-items:center;justify-content:center;color:#fff}
+.cword{font-size:22px;font-weight:800;margin-top:12px}
+.speed{margin:0 18px 14px;display:flex;align-items:center}
+.wired{margin:0 18px 20px;background:var(--green-soft);border-radius:22px;padding:12px;display:flex;align-items:center;color:var(--green-text);font-size:15px;font-weight:700}
+
+/* helper */
+.htitle{padding:6px 22px 0}
+.htitle h2{font-size:24px;font-weight:800;line-height:1.3}
+.htitle p{font-size:13px;color:var(--muted)}
+.hcard{margin:10px 18px 0}
+.hlabel{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700}
+.langs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.lang{height:44px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;background:var(--ground);border:2px solid var(--track)}
+.lang.on{background:var(--amber);border-color:var(--amber);color:#fff}
+.bal{display:flex;align-items:center;margin-top:10px}
+.balbtn{width:52px;height:52px;border-radius:50%;border:3px solid var(--blue);display:flex;align-items:center;justify-content:center;background:#fff}
+.baltrack{flex:1;margin:0 10px;height:32px;position:relative}
+.baltrack .l{position:absolute;left:0;right:0;top:9px;height:14px;border-radius:7px;background:var(--track)}
+.baltrack .k{position:absolute;top:0;width:32px;height:32px;border-radius:50%;background:var(--blue);border:4px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.trow{display:flex;align-items:center;margin-top:12px}
+.trow .ib{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.trow .tx{flex:1;margin:0 8px 0 12px}
+.trow .tx h4{font-size:16px;font-weight:700;line-height:1.35}
+.trow .tx p{font-size:12.5px;color:var(--muted);line-height:1.35}
+.tog{width:68px;height:40px;border-radius:20px;padding:4px;background:var(--toggle-off);position:relative}
+.tog i{position:absolute;top:4px;width:32px;height:32px;border-radius:50%;background:#fff}
+
+/* taps */
+.tap{position:absolute;width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:50%;background:rgba(15,23,42,.22);border:4px solid rgba(255,255,255,.95);box-shadow:0 4px 18px rgba(0,0,0,.25);pointer-events:none;display:none;z-index:50}
+
+/* subtitles */
+#subs{position:absolute;left:0;right:0;bottom:46px;display:flex;justify-content:center;z-index:100}
+#subs span{max-width:1500px;text-align:center;background:rgba(15,23,42,.86);color:#fff;font-size:38px;line-height:1.45;font-weight:600;padding:12px 34px 14px;border-radius:20px}
+
+/* brand mark (corner) */
+#mark{position:absolute;right:56px;top:40px;display:flex;align-items:center;gap:14px;font-size:34px;font-weight:800;z-index:90}
+.appicon{background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff}
+
+/* full-stage compositions */
+.mid{position:absolute;inset:0 0 150px 0;display:flex;align-items:center;justify-content:center}
+.node{display:flex;flex-direction:column;align-items:center;gap:26px;width:340px}
+.node .c{width:230px;height:230px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 20px 50px rgba(15,23,42,.12)}
+.node b{font-size:40px;font-weight:800;text-align:center;line-height:1.3}
+.tcard{width:440px;height:430px;border-radius:44px;background:#fff;box-shadow:0 24px 60px rgba(15,23,42,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px;margin:0 30px}
+.tcard .c{width:200px;height:200px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative}
+.tcard b{font-size:44px;font-weight:800;text-align:center;line-height:1.3}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="bg"></div>
+  <div class="blob" id="blobA" style="width:900px;height:900px;left:-250px;top:-300px;background:#BBF7D0"></div>
+  <div class="blob" id="blobB" style="width:800px;height:800px;right:-250px;bottom:-320px;background:#BFDBFE"></div>
+  <div id="scenes"></div>
+  <div id="mark"><span class="appicon" style="width:58px;height:58px;border-radius:16px"><span class="ic" style="width:58px;height:58px" data-ic="ic_launcher_foreground_raw"></span></span><span>सुनाइ</span></div>
+  <div id="subs"><span></span></div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const ease=x=>{x=clamp(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2};
+const back=x=>{x=clamp(x);const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const ramp=(t,a,d=.5)=>ease((t-a)/d);
+const pop=(t,a,d=.55)=>back((t-a)/d);
+const lerp=(a,b,k)=>a+(b-a)*k;
+const ic=(n,c,s)=>`<span class="ic" style="color:${c};width:${s}px;height:${s}px">${ICONS[n]}</span>`;
+const icf=(n,c,s,extra='')=>`<span class="ic" style="color:${c};width:${s}px;height:${s}px;${extra}">${ICONS[n]}</span>`;
+const CSS=getComputedStyle(document.documentElement);
+const C=n=>CSS.getPropertyValue('--'+n).trim();
+const ND=['०','१','२','३','४','५','६','७','८','९'];
+document.querySelectorAll('[data-ic]').forEach(e=>e.innerHTML=ICONS[e.dataset.ic]);
+
+// ---------------------------------------------------------------- screens (built from the app's layouts)
+const sbar=`<div class="sbar"><span>१०:३०</span><span class="r"><span class="sig"><i style="height:4px"></i><i style="height:7px"></i><i style="height:10px"></i><i style="height:12px"></i></span><span class="batt"><i></i></span></span></div>`;
+const voiceBtn=`<div class="voicebtn"><span class="ic vi" style="width:34px;height:34px">${ICONS.ic_voice}</span><b class="vl">सुन्नुस्</b></div>`;
+const navBar=sel=>`<div class="nav">${[['ic_ear','सुन्ने'],['ic_ear_check','जाँच'],['ic_helper','सहयोगी']].map(([i,w],k)=>`<div class="navi ${k==sel?'on':''}">${ic(i,'currentColor',32)}<b>${w}</b></div>`).join('')}</div>`;
+
+function homeScreen(){return `${sbar}
+<div class="toprow"><div class="pill">${ic('ic_earbud',C('ink'),34)}<span class="dotc" style="background:var(--green)">${ic('ic_check','#fff',18)}</span>${ic('ic_bolt',C('green'),26)}</div><div class="flex1"></div>${voiceBtn}</div>
+<div class="center"><div class="big"><span class="ic bigon" style="width:120px;height:120px;color:#fff;display:none">${ICONS.ic_ear_on}</span><span class="ic bigoff" style="width:120px;height:120px">${ICONS.ic_ear_off_raw}</span></div>
+<div class="meter">${'<i></i>'.repeat(11)}</div><div class="state">बन्द</div></div>
+<div class="card volcard"><div class="vbtn vdown" style="background:#fff;border:3px solid var(--blue)">${ic('ic_vol_down',C('blue'),34)}</div>
+<div class="vbars">${[1,2,3,4,5].map(i=>`<i style="height:${12+i*10}px"></i>`).join('')}</div>
+<div class="vbtn vup" style="background:var(--blue)">${ic('ic_vol_up','#fff',38)}</div></div>
+<div class="places">${[['ic_place_home','घर'],['ic_place_talk','कुरा'],['ic_place_crowd','भीड']].map(([i,w])=>`<div class="tile">${ic(i,'currentColor',40)}<b>${w}</b></div>`).join('')}</div>
+${navBar(0)}`}
+const SHAPE=[0.3,0.5,0.75,1,0.7,0.9,0.6,0.85,0.55,0.4,0.3];
+function setHome(r,s){
+  const on=!!s.on, big=r.querySelector('.big');
+  big.style.background=on?C('green'):'#fff'; big.style.borderColor=on?C('green-ring'):C('red-ring');
+  big.style.transform=`scale(${s.bigScale||1})`;
+  r.querySelector('.bigon').style.display=on?'block':'none'; r.querySelector('.bigoff').style.display=on?'none':'block';
+  const st=r.querySelector('.state'); st.textContent=on?'खुला':'बन्द'; st.style.color=on?C('green'):C('red');
+  r.querySelectorAll('.meter i').forEach((b,i)=>{b.style.background=on?C('green'):C('line');b.style.height=(on?6+28*SHAPE[i]*(s.level||0):6)+'px'});
+  r.querySelectorAll('.vbars i').forEach((b,i)=>b.style.background=i<(s.vol??3)?C('blue'):C('track'));
+  r.querySelectorAll('.places .tile').forEach((t,i)=>{const sel=i==(s.place??0);t.style.background=sel?C('blue'):'#fff';t.style.color=sel?'#fff':C('ink')});
+  r.querySelector('.vup').style.transform=`scale(${s.upScale||1})`;
+  setVoice(r,s.speaking,s.t||0);
+}
+function setVoice(r,speaking,t){
+  const v=r.querySelector('.voicebtn');
+  v.style.background=speaking?C('amber'):C('amber-soft'); v.style.borderColor=speaking?C('amber-ring'):C('amber-soft');
+  v.style.color=speaking?'#fff':C('amber-text'); r.querySelector('.vl').textContent=speaking?'बोल्दै…':'सुन्नुस्';
+  r.querySelectorAll('.voicebtn .ring').forEach(e=>e.remove());
+  if(speaking){for(let k=0;k<2;k++){const p=((t*0.9)+k*.5)%1;const e=document.createElement('i');e.className='ring';
+    const sz=76+p*70;e.style.cssText=`width:${sz}px;height:${sz}px;left:${-4-(sz-76)/2}px;top:${-4-(sz-76)/2}px;opacity:${(1-p)*.8}`;v.appendChild(e)}}
+}
+
+function testScreen(){return `${sbar}
+<div class="toprow"><div class="back">${ic('ic_back',C('ink'),32)}</div><div class="flex1"></div>${voiceBtn}</div>
+<div class="ears"><div class="tile">${icf('ic_ear','currentColor',64,'transform:scaleX(-1)')}<b>बायाँ</b></div><div class="tile">${ic('ic_ear','currentColor',64)}<b>दायाँ</b></div></div>
+<div class="tgroup" style="flex:1;display:flex;flex-direction:column">
+ <div class="tdots">${'<i></i>'.repeat(6)}</div>
+ <div style="flex:1;display:flex;align-items:center;justify-content:center"><div class="play">${ic('ic_voice','currentColor',96)}</div></div>
+ <div class="yn"><div class="tile no" style="background:var(--red);margin-right:7px">${icf('ic_thumb_up','#fff',56,'transform:rotate(180deg)')}<b>सुनिनँ</b></div><div class="tile yes" style="background:var(--green);margin-left:7px">${ic('ic_thumb_up','#fff',56)}<b>सुनें</b></div></div>
+</div>
+<div class="dgroup" style="flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;padding:0 18px 20px">
+ <div class="dbadge" style="width:190px;height:190px;border-radius:50%;background:var(--green);border:14px solid var(--green-ring);display:flex;align-items:center;justify-content:center">${ic('ic_check','#fff',96)}</div>
+ <div style="font-size:28px;font-weight:800;margin-top:18px">मिलाइयो</div>
+ <div style="display:flex;width:100%;height:96px;margin-top:18px"><div class="tile" style="margin:0 7px 0 0;border:3px solid var(--line);border-radius:26px">${ic('ic_retry',C('ink'),40)}<b>फेरि</b></div><div class="tile" style="margin:0 0 0 7px;background:var(--blue);color:#fff;border-radius:26px">${ic('ic_arrow','#fff',40)}<b>अगाडि</b></div></div>
+</div>`}
+function setTest(r,s){
+  r.querySelectorAll('.ears .tile').forEach((t,i)=>{const sel=i==(s.ear||0);t.style.background=sel?C('blue'):'#fff';t.style.color=sel?'#fff':C('muted')});
+  const done=s.step>=6;
+  r.querySelector('.tgroup').style.display=done?'none':'flex'; r.querySelector('.dgroup').style.display=done?'flex':'none';
+  r.querySelector('.dbadge').style.transform=`scale(${s.doneScale??1})`;
+  r.querySelectorAll('.tdots i').forEach((d,i)=>{d.style.background=i<s.step?C('green'):i==s.step?'#fff':C('line');d.style.border=i==s.step?`5px solid ${C('blue')}`:'none'});
+  const p=r.querySelector('.play'); p.style.background=s.playing?C('blue'):'#fff'; p.style.borderColor=s.playing?C('blue-ring'):C('blue-soft'); p.style.color=s.playing?'#fff':C('blue');
+  p.style.transform=`scale(${s.playing?1+0.03*Math.sin(s.t*18):1})`;
+  r.querySelector('.yes').style.transform=`scale(${s.yesScale||1})`; r.querySelector('.no').style.transform=`scale(${s.noScale||1})`;
+  setVoice(r,false,0);
+}
+
+function connectScreen(){return `${sbar}
+<div class="toprow"><div class="back">${ic('ic_back',C('ink'),32)}</div><div class="flex1"></div>${voiceBtn}</div>
+<div class="card chain">${ic('ic_phone',C('ink'),72)}<div class="cdots">${'<i></i>'.repeat(3)}</div><div class="btb" style="width:56px;height:56px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center">${ic('ic_bluetooth','#fff',30)}</div><div class="cdots">${'<i></i>'.repeat(3)}</div>${ic('ic_earbud',C('ink'),72)}</div>
+<div class="steps">${[['●','ic_case',C('ink'),'बट्टा खोल्नुस्'],['● ●','ic_bt_circle',C('blue'),'नीलो थिच्नुस्'],['● ● ●','ic_ear_in',C('green'),'कानमा लाउनुस्']].map(([d,i,c,w])=>`<div class="tile">${d}<span style="margin-top:6px">${ic(i,c,46)}</span><b>${w}</b></div>`).join('')}</div>
+<div class="center"><div class="cbtn"><span class="ic cbt" style="width:70px;height:70px">${ICONS.ic_bluetooth}</span><span class="ic cck" style="width:70px;height:70px;display:none">${ICONS.ic_check}</span></div><div class="cword">जोड्नुहोस्</div></div>
+<div class="card speed" style="visibility:hidden"><div style="width:60px;height:60px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center">${ic('ic_bolt','#fff',34)}</div>
+ <div style="margin-left:14px"><div style="font-size:17px;font-weight:800">छिटो — राम्रो</div><div style="font-size:13px;color:var(--muted)">यो इयरफोन ठीक छ</div></div></div>
+<div class="wired">${ic('ic_wired',C('green-text'),40)}<span style="flex:1;margin-left:12px">तारवाला इयरफोन सबैभन्दा छिटो</span>${ic('ic_bolt',C('green'),30)}</div>`}
+function setConnect(r,s){
+  const col=s.done?C('green'):s.searching?C('blue'):C('line');
+  r.querySelectorAll('.cdots i').forEach((d,i)=>{d.style.background=col; d.style.opacity=s.searching&&!s.done?(0.35+0.65*((Math.sin(s.t*7-i*0.9)+1)/2)):1});
+  r.querySelector('.btb').style.background=s.done?C('green'):C('blue');
+  const b=r.querySelector('.cbtn'); b.style.background=s.done?C('green'):C('blue');
+  b.style.borderColor=s.done?C('green-ring'):s.searching?C('blue-ring'):C('blue-soft'); b.style.transform=`scale(${s.btnScale||1})`;
+  r.querySelector('.cbt').style.display=s.done?'none':'block'; r.querySelector('.cck').style.display=s.done?'block':'none';
+  r.querySelector('.cword').textContent=s.done?'जोडियो':'जोड्नुहोस्'; r.querySelector('.cword').style.color=s.done?C('green'):C('ink');
+  const sp=r.querySelector('.speed'); sp.style.visibility=s.done?'visible':'hidden'; sp.style.opacity=s.speedK??1; sp.style.transform=`translateY(${(1-(s.speedK??1))*20}px)`;
+  setVoice(r,false,0);
+}
+
+function helperScreen(){
+  const row=(i,fg,bg,t,sb,cls)=>`<div class="trow ${cls}"><div class="ib" style="background:${bg}">${ic(i,fg,26)}</div><div class="tx"><h4>${t}</h4><p>${sb}</p></div><div class="tog"><i></i></div></div>`;
+  return `${sbar}
+<div class="toprow"><div class="back">${ic('ic_back',C('ink'),32)}</div><div class="htitle" style="flex:1"><h2>सहयोगी</h2><p>परिवारका सदस्यले मिलाउने</p></div>${voiceBtn}</div>
+<div class="card hcard"><div class="hlabel">${ic('ic_voice',C('amber'),24)}बोल्ने भाषा</div><div class="langs">${['नेपाली','मैथिली','भोजपुरी','थारू'].map((l,i)=>`<div class="lang ${i==0?'on':''}">${l}</div>`).join('')}</div></div>
+<div class="card hcard"><div class="hlabel">दुई कानको सन्तुलन</div><div class="bal"><div class="balbtn">${icf('ic_ear',C('blue'),30,'transform:scaleX(-1)')}</div><div class="baltrack"><div class="l"></div><div class="k"></div></div><div class="balbtn">${ic('ic_ear',C('blue'),30)}</div></div></div>
+<div class="card hcard" style="padding-top:2px">
+ ${row('ic_bolt',C('green'),C('green-soft'),'कम ढिलाइ मोड','छिटो सुनिन्छ, AI हल्ला सफा बन्द','r1')}
+ ${row('ic_shield',C('blue'),C('blue-soft'),'कान सुरक्षा','चर्को आवाज आफैं घटाउँछ','r2')}
+ ${row('ic_battery',C('amber'),C('amber-soft'),'ब्याट्री बचत','AI हल्ला सफा बन्द, ब्याट्री धेरै चल्छ','r3')}
+</div>
+<div class="flex1"></div>
+${navBar(2)}`}
+function setTog(el,k){el.style.background=k>.5?C('green'):C('toggle-off');el.querySelector('i').style.left=(4+28*k)+'px'}
+function setHelper(r,s){
+  setTog(r.querySelector('.r1 .tog'),s.low||0); setTog(r.querySelector('.r2 .tog'),s.safety||0); setTog(r.querySelector('.r3 .tog'),s.saver||0);
+  const usable=360-36-28-104-20-32; r.querySelector('.baltrack .k').style.left=(usable/2+usable*0.1*(s.bal||0))+'px';
+  setVoice(r,false,0);
+}
+
+const phone=(inner,extra='')=>`<div class="phone" style="${extra}"><div class="notch"></div><div class="screen"><div class="dp">${inner}</div></div></div>`;
+const copy=(kicker,kc,kb,h1,sub,more='')=>`<div class="copy"><div class="kicker" style="color:${kc};background:${kb}">${kicker}</div><div class="h1">${h1}</div><div class="sub">${sub}</div>${more}</div>`;
+
+// waveform svg path: noisy (k=0) to clean speech (k=1)
+function wave(w,h,t,k,seed=0){
+  let d='';const n=120;
+  for(let i=0;i<=n;i++){const x=i/n*w;const u=i/n;
+    const env=Math.pow(Math.sin(Math.PI*u),1.2)*(0.55+0.45*Math.sin(u*9+t*2+seed));
+    const speech=env*Math.sin(u*46+t*9)*0.9;
+    const noise=(Math.sin(u*337+t*41+seed)*0.5+Math.sin(u*191-t*29)*0.5)*0.85;
+    const y=h/2-(h/2-6)*(speech*k*1.0+noise*(1-k)*0.9+speech*(1-k)*0.35);
+    d+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)}
+  return d}
+
+// ---------------------------------------------------------------- scenes
+const SC={};
+function sceneRoot(id,html){const d=document.createElement('div');d.className='scene';d.id='sc_'+id;d.innerHTML=html;$('#scenes').appendChild(d);return d}
+function taps(n){return '<div class="tap"></div>'.repeat(n)}
+// place a tap ripple over an element; k in [0,1] progress of the tap
+function tapAt(tapEl,target,t,at){
+  const k=(t-at+0.25)/0.7;
+  if(k<0||k>1){tapEl.style.display='none';return}
+  const r=target.getBoundingClientRect();
+  tapEl.style.display='block'; tapEl.style.left=(r.left+r.width/2)+'px'; tapEl.style.top=(r.top+r.height/2)+'px';
+  tapEl.style.opacity=k<.35?k/.35:1-(k-.35)/.65; tapEl.style.transform=`scale(${0.75+0.5*k})`;
+}
+const press=(t,at)=>{const k=(t-at+0.12)/0.35;return k<0||k>1?1:1-0.07*Math.sin(Math.PI*k)};
+
+SC.hook={html:`
+ <div class="mid" style="justify-content:flex-start;padding-left:200px;gap:110px">
+  <div style="position:relative;width:440px;height:440px;flex:none">
+   <div class="hk-ring" style="position:absolute;inset:0;border-radius:50%;background:#fff;border:22px solid var(--red-ring);display:flex;align-items:center;justify-content:center;box-shadow:0 30px 70px rgba(15,23,42,.15)">${ic('ic_ear_off_raw','',230)}</div>
+   <svg class="hk-waves" viewBox="0 0 200 440" style="position:absolute;left:-210px;top:0;width:200px;height:440px;overflow:visible"></svg>
+  </div>
+  <div style="width:900px">
+   <div class="h1 hk-h" style="font-size:104px">राम्ररी सुनिँदैन?</div>
+   <div class="sub hk-s" style="font-size:46px">गाउँका धेरै बुढापाकालाई सुन्न गाह्रो छ।</div>
+   <div class="hk-tag" style="display:inline-flex;align-items:center;gap:18px;margin-top:44px;background:#fff;border:4px solid var(--red);color:var(--red);border-radius:26px;padding:16px 34px;font-size:46px;font-weight:800">श्रवण यन्त्र — महँगो, पहुँचभन्दा टाढा</div>
+  </div>
+ </div>`,
+ render(r,t,s){
+  r.querySelector('.hk-ring').style.transform=`scale(${pop(t,0.2,.7)})`;
+  const h=r.querySelector('.hk-h'),sb=r.querySelector('.hk-s'),tg=r.querySelector('.hk-tag');
+  h.style.opacity=ramp(t,.5,.6);h.style.transform=`translateY(${(1-ramp(t,.5,.6))*30}px)`;
+  sb.style.opacity=ramp(t,1.1,.6);
+  const tt=s.vo+s.subs[1][0]; tg.style.opacity=ramp(t,tt,.5); tg.style.transform=`scale(${lerp(.85,1,pop(t,tt,.6))})`;
+  let svg='';for(let k=0;k<3;k++){const p=((t*.45)+k/3)%1;const x=200-p*150;const o=(1-p)*0.5*(p>0.05?1:p/0.05);
+    svg+=`<path d="M${x} ${220-110+k*0} q -40 110 0 220" fill="none" stroke="#94A3B8" stroke-width="10" stroke-linecap="round" opacity="${o}" transform="translate(${-k*0} 0)"/>`}
+  r.querySelector('.hk-waves').innerHTML=svg.replace(/M(\S+) (\S+) q/g,(m,x)=>`M${x} 110 q`);
+ }};
+
+SC.intro={html:`
+ <div class="mid" style="flex-direction:column;gap:20px">
+  <div class="in-icon appicon" style="width:300px;height:300px;border-radius:80px;box-shadow:0 30px 70px rgba(21,128,61,.35)"><span class="ic" style="width:300px;height:300px">${ICONS.ic_launcher_foreground_raw}</span></div>
+  <div class="in-name" style="font-size:190px;font-weight:800;line-height:1.25;margin-top:10px">सुनाइ</div>
+  <div class="in-tag sub" style="font-size:50px;margin-top:0;color:var(--ink)">तपाईंको मोबाइल — <span style="color:var(--green);font-weight:800">सुन्ने साथी</span></div>
+  <div class="in-free" style="margin-top:22px;background:var(--green);color:#fff;font-size:42px;font-weight:800;padding:12px 40px;border-radius:40px">निःशुल्क एप</div>
+ </div>`,
+ render(r,t,s){
+  const a=s.vo+s.subs[0][1]-0.6;
+  r.querySelector('.in-icon').style.transform=`scale(${pop(t,0.05,.7)}) rotate(${(1-ease(t/.7))*-12}deg)`;
+  const n=r.querySelector('.in-name');n.style.opacity=ramp(t,.35,.5);n.style.transform=`translateY(${(1-ramp(t,.35,.5))*40}px)`;
+  r.querySelector('.in-tag').style.opacity=ramp(t,a,.5);
+  const f=r.querySelector('.in-free');f.style.opacity=ramp(t,a+1.6,.4);f.style.transform=`scale(${pop(t,a+1.6,.5)})`;
+ }};
+
+SC.how={html:`
+ <div style="position:absolute;top:130px;left:0;right:0;text-align:center" class="h1 hw-h">कसरी काम गर्छ?</div>
+ <div class="mid" style="gap:0;padding-top:60px">
+  <div class="node n0"><div class="c">${ic('ic_phone',C('ink'),120)}</div><b>माइकले सुन्छ</b></div>
+  <svg class="hw-w0" width="260" height="120" style="margin-bottom:90px;overflow:visible"><path fill="none" stroke="#94A3B8" stroke-width="5" stroke-linecap="round"/></svg>
+  <div class="node n1"><div class="c" style="background:var(--green);box-shadow:0 20px 50px rgba(21,128,61,.35)"><span style="color:#fff;font-size:86px;font-weight:800;font-family:'Noto Sans'">AI</span></div><b>सफा र<br>सन्तुलित</b></div>
+  <svg class="hw-w1" width="260" height="120" style="margin-bottom:90px;overflow:visible"><path fill="none" stroke="#15803D" stroke-width="6" stroke-linecap="round"/></svg>
+  <div class="node n2"><div class="c">${ic('ic_earbud',C('ink'),120)}</div><b>इयरफोनमा</b></div>
+ </div>`,
+ render(r,t,s){
+  r.querySelector('.hw-h').style.opacity=ramp(t,.1,.5);
+  const st=[s.vo+0.1,s.vo+s.subs[1][0],s.vo+s.subs[1][0]+2.2];
+  ['.n0','.n1','.n2'].forEach((q,i)=>{const e=r.querySelector(q);e.style.opacity=ramp(t,st[i],.4);e.style.transform=`scale(${lerp(.7,1,pop(t,st[i],.6))})`});
+  const w0=r.querySelector('.hw-w0'),w1=r.querySelector('.hw-w1');
+  w0.style.opacity=ramp(t,st[0]+.6,.5); w1.style.opacity=ramp(t,st[2]-.4,.5);
+  w0.querySelector('path').setAttribute('d',wave(260,120,t,0,1)); w1.querySelector('path').setAttribute('d',wave(260,120,t,1,2));
+ }};
+
+const homeCopy=copy('सजिलो','#14532D','#DCFCE7','एउटा बटन —<br>सुनाइ खुल्छ','नीलो बटनले आवाज <b style="color:var(--blue)">घटाउनुहोस्</b> वा <b style="color:var(--blue)">बढाउनुहोस्</b>।');
+SC.home={html:homeCopy+phone(homeScreen())+taps(2),
+ render(r,t,s){
+  const e=s.ev,vt=t-s.vo, on=vt>=e.press_big;
+  let vol=3; if(vt>=e.vol_up1)vol=4; if(vt>=e.vol_up2)vol=5;
+  const lvl=on?clamp(0.45+0.4*Math.sin(t*7.3)*Math.sin(t*2.1)+0.15*Math.sin(t*17)):0;
+  const big=r.querySelector('.big'),up=r.querySelector('.vup');
+  setHome(r,{on,vol,place:0,level:lvl*ramp(vt,e.press_big,.4),bigScale:press(vt,e.press_big),upScale:Math.min(press(vt,e.vol_up1),press(vt,e.vol_up2)),t});
+  const tp=r.querySelectorAll('.tap'); tapAt(tp[0],big,vt,e.press_big);
+  tapAt(tp[1],up,vt,vt<(e.vol_up1+e.vol_up2)/2?e.vol_up1:e.vol_up2);
+  const cp=r.querySelector('.copy'); cp.style.opacity=ramp(t,.15,.5);
+  r.querySelector('.sub').style.opacity=ramp(vt,e.press_big+1.2,.5);
+ }};
+
+SC.places={html:copy('ठाउँ अनुसार','#1E3A8A','#DBEAFE','घर · कुरा · भीड','जहाँ हुनुहुन्छ, त्यही चित्र छान्नुहोस्।',
+ `<div class="card pl-ai" style="margin-top:40px;padding:26px 30px;border-radius:30px;box-shadow:0 10px 30px rgba(15,23,42,.08);display:flex;align-items:center;gap:26px">
+   <div style="flex:none;width:120px;height:120px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;font:800 50px 'Noto Sans'">AI</div>
+   <div style="flex:1"><div style="font-size:38px;font-weight:800">भीडमा हल्ला हट्छ</div><div style="font-size:30px;color:var(--muted)">बोलेको आवाज प्रष्ट</div>
+   <svg class="pl-w" width="520" height="70" style="display:block;margin-top:8px;overflow:visible"><path fill="none" stroke-width="5" stroke-linecap="round"/></svg></div></div>`)
+ +phone(homeScreen())+taps(2),
+ render(r,t,s){
+  const e=s.ev,vt=t-s.vo; let place=0; if(vt>=e.talk)place=1; if(vt>=e.crowd)place=2;
+  // crowd selected a bit later in the voice: align with "भीड" mention
+  const lvl=clamp(0.5+0.35*Math.sin(t*6.1)*Math.sin(t*1.7));
+  setHome(r,{on:true,vol:4,place,level:lvl,t});
+  const tiles=r.querySelectorAll('.places .tile'),tp=r.querySelectorAll('.tap');
+  tapAt(tp[0],tiles[1],vt,e.talk); tapAt(tp[1],tiles[2],vt,e.crowd);
+  r.querySelector('.copy').style.opacity=ramp(t,.1,.5);
+  const aiT=s.subs[2][0]; const ai=r.querySelector('.pl-ai'); ai.style.opacity=ramp(t,aiT,.5); ai.style.transform=`translateY(${(1-ramp(t,aiT,.5))*30}px)`;
+  const k=ramp(t,aiT+0.8,1.6); const p=r.querySelector('.pl-w path'); p.setAttribute('d',wave(520,70,t,k,3)); p.setAttribute('stroke',k>.5?C('green'):'#94A3B8');
+ }};
+
+SC.test={html:copy('कान जाँच','#14532D','#DCFCE7','हरेक कान<br>छुट्टाछुट्टै','आवाज सुन्नुभयो — <b style="color:var(--green)">हरियो</b>।<br>सुन्नुभएन — <b style="color:var(--red)">रातो</b>।')+phone(testScreen())+taps(1),
+ render(r,t,s){
+  const e=s.ev,vt=t-s.vo;
+  const seq=[['play1','yes1'],['play2','yes2'],['play3','no3'],['play4','yes4'],['play5','yes5'],['play6','no6']];
+  let step=0,playing=false,tapT=-9,tapEl=null,yesS=1,noS=1;
+  seq.forEach(([p,a],i)=>{ if(vt>=e[a])step=i+1; if(vt>=e[p]&&vt<e[a])playing=true;
+    const isYes=a.startsWith('yes'); if(isYes)yesS=Math.min(yesS,press(vt,e[a])); else noS=Math.min(noS,press(vt,e[a])); });
+  let near=null,best=9; seq.forEach(([p,a])=>{['p','a'].forEach(()=>{});const d=Math.abs(vt-e[a]);if(d<best){best=d;near=a}});
+  const tgt=near&&near.startsWith('yes')?'.yes':'.no';
+  setTest(r,{ear:0,step,playing,yesScale:yesS,noScale:noS,t,doneScale:pop(vt,e.no6,.5)});
+  const tp=r.querySelector('.tap'); if(step<6||vt<e.no6+0.6)tapAt(tp,r.querySelector(tgt),vt,e[near]); else tp.style.display='none';
+  r.querySelector('.copy').style.opacity=ramp(t,.1,.5);
+ }};
+
+SC.connect={html:copy('इयरफोन','#1E3A8A','#DBEAFE','तार वा ब्लुटुथ —<br>दुवै चल्छ','तारवाला इयरफोन <b style="color:var(--green)">सबैभन्दा छिटो</b>।',
+ `<div class="chiprow"><div class="chip">${ic('ic_wired',C('green'),44)}तारवाला</div><div class="chip">${ic('ic_bluetooth',C('blue'),44)}ब्लुटुथ</div><div class="chip">${ic('ic_bolt',C('green'),44)}छिटो</div></div>`)+phone(connectScreen())+taps(1),
+ render(r,t,s){
+  const e=s.ev,vt=t-s.vo;
+  setConnect(r,{searching:vt>=e.press,done:vt>=e.connected,btnScale:Math.min(press(vt,e.press),vt>=e.connected?pop(vt,e.connected,.5):1),t,speedK:ramp(vt,e.connected+.3,.5)});
+  tapAt(r.querySelector('.tap'),r.querySelector('.cbtn'),vt,e.press);
+  r.querySelector('.copy').style.opacity=ramp(t,.1,.5);
+  r.querySelector('.chiprow').style.opacity=ramp(t,s.vo+s.subs[1][0],.5);
+ }};
+
+SC.voice={html:copy('पढ्न नपर्ने','#78350F','#FEF3C7','चित्रले बुझिन्छ,<br>आवाजले सिकाउँछ','हरेक पानामा <b style="color:var(--amber)">सुन्नुस्</b> बटन — थिचे एप आफैं बोल्छ।')+
+ `<div class="vc-bub" style="position:absolute;left:770px;top:110px;width:400px;background:var(--amber);color:#fff;font-size:27px;line-height:1.5;font-weight:600;padding:22px 26px;border-radius:28px 28px 6px 28px;box-shadow:0 20px 40px rgba(180,83,9,.3)">“ठूलो गोलो बटन थिच्दा सुनाइ खुल्छ…”</div>`+phone(homeScreen())+taps(1),
+ render(r,t,s){
+  const e=s.ev,vt=t-s.vo, sp=vt>=e.speak;
+  setHome(r,{on:false,vol:3,place:0,speaking:sp,t:vt});
+  tapAt(r.querySelector('.tap'),r.querySelector('.voicebtn'),vt,e.speak);
+  const b=r.querySelector('.vc-bub'); b.style.opacity=ramp(vt,e.speak+.3,.4); b.style.transform=`scale(${lerp(.8,1,pop(vt,e.speak+.3,.5))})`; b.style.transformOrigin='100% 100%';
+  r.querySelector('.copy').style.opacity=ramp(t,.1,.5);
+  r.querySelector('.copy .sub').style.opacity=ramp(t,s.vo+s.subs[1][0],.5);
+ }};
+
+const wifiOff=`<svg viewBox="0 0 24 24" width="120" height="120" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8.5a15 15 0 0 1 20 0"/><path d="M5 12a10.5 10.5 0 0 1 14 0"/><path d="M8.5 15.5a5.5 5.5 0 0 1 7 0"/><circle cx="12" cy="19" r="1.2" fill="currentColor"/><path d="M3 3l18 18" stroke="#B91C1C" stroke-width="2.6"/></svg>`;
+const micOff=`<svg viewBox="0 0 24 24" width="120" height="120" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 17.5V21"/><path d="M3 3l18 18" stroke="#B91C1C" stroke-width="2.6"/></svg>`;
+SC.trust={html:`<div style="position:absolute;top:120px;left:0;right:0;text-align:center" class="h1 tr-h">भरोसा गर्न सकिने</div>
+ <div class="mid" style="padding-top:110px">
+  <div class="tcard t0"><div class="c" style="background:var(--ground);color:var(--ink)">${wifiOff}</div><b>इन्टरनेट<br>चाहिँदैन</b></div>
+  <div class="tcard t1"><div class="c" style="background:var(--ground);color:var(--ink)">${micOff}</div><b>केही पनि<br>रेकर्ड हुँदैन</b></div>
+  <div class="tcard t2"><div class="c" style="background:var(--amber-soft)"><span class="tb">${ic('ic_battery',C('amber'),120)}</span></div><b>ब्याट्री बचत<br>आफैं खुल्छ</b></div>
+ </div>`,
+ render(r,t,s){
+  r.querySelector('.tr-h').style.opacity=ramp(t,.05,.5);
+  const st=[s.vo+0.1,s.vo+s.subs[0][1]*0.55,s.vo+s.subs[1][0]];
+  ['.t0','.t1','.t2'].forEach((q,i)=>{const e=r.querySelector(q);e.style.opacity=ramp(t,st[i],.4);e.style.transform=`translateY(${(1-pop(t,st[i],.6))*60}px)`});
+  r.querySelector('.tb').style.opacity=t>st[2]+0.6?(0.6+0.4*Math.abs(Math.sin(t*3))):1;
+ }};
+
+SC.helper={html:copy('परिवारको लागि','#0F172A','#E2E8F0','सहयोगीले<br>मिलाइदिने','भाषा · दुई कानको सन्तुलन · कान सुरक्षा',
+ `<div class="chiprow"><div class="chip">${ic('ic_lock',C('ink'),40)}गल्तीले नबिग्रियोस् भनेर बन्द</div></div>`)+phone(helperScreen())+taps(1),
+ render(r,t,s){
+  const e=s.ev,vt=t-s.vo;
+  const bal=vt<1.6?0:vt<2.4?-1:0;
+  setHelper(r,{low:0,safety:ramp(vt,e.safety,.25),saver:0,bal:lerp(0,-2,ramp(vt,1.4,.4))+lerp(0,2,ramp(vt,2.4,.4))});
+  tapAt(r.querySelector('.tap'),r.querySelector('.r2 .tog'),vt,e.safety);
+  r.querySelector('.copy').style.opacity=ramp(t,.1,.5);
+  r.querySelector('.chiprow').style.opacity=ramp(t,s.vo+3.0,.5);
+ }};
+
+SC.outro={html:`<div class="mid" style="flex-direction:column">
+  <div style="display:flex;align-items:center;gap:50px">
+   <div class="ou-icon appicon" style="width:230px;height:230px;border-radius:62px;box-shadow:0 30px 70px rgba(21,128,61,.35)"><span class="ic" style="width:230px;height:230px">${ICONS.ic_launcher_foreground_raw}</span></div>
+   <div><div class="ou-name" style="font-size:170px;font-weight:800;line-height:1.2">सुनाइ</div><div class="ou-tag" style="font-size:52px;font-weight:700;color:var(--muted)">निःशुल्क · सानो · सबैका लागि</div></div>
+  </div>
+  <div class="ou-chips chiprow" style="margin-top:46px;justify-content:center">
+   <div class="chip">${ic('ic_ear_on',C('green'),44)}प्रष्ट सुनाइ</div><div class="chip">${ic('ic_ear_check',C('green'),44)}कान जाँच</div><div class="chip"><span style="font:800 30px 'Noto Sans';color:var(--green)">AI</span>हल्ला सफा</div><div class="chip">${ic('ic_lock',C('ink'),40)}इन्टरनेट बिना</div></div>
+  <div class="ou-med" style="margin-top:46px;display:flex;align-items:center;gap:22px;background:var(--amber-soft);border:3px solid var(--amber-ring);color:var(--amber-text);border-radius:26px;padding:20px 34px;font-size:34px;font-weight:600;max-width:1500px">${ic('ic_shield',C('amber'),56)}<span>यो चिकित्सकीय उपकरण होइन। कान दुखे, पीप आए वा अचानक सुन्न छाडे स्वास्थ्य चौकी जानुहोस्।</span></div>
+ </div>`,
+ render(r,t,s){
+  r.querySelector('.ou-icon').style.transform=`scale(${pop(t,.05,.7)})`;
+  const n=r.querySelector('.ou-name');n.style.opacity=ramp(t,.3,.5);
+  r.querySelector('.ou-tag').style.opacity=ramp(t,s.vo+s.subs[0][1],.5);
+  const c=r.querySelector('.ou-chips');c.style.opacity=ramp(t,s.vo+s.subs[1][0],.5);
+  r.querySelector('.ou-med').style.opacity=ramp(t,s.vo+s.subs[2][0],.5);
+ }};
+
+// ---------------------------------------------------------------- build + render(t)
+TL.scenes.forEach(s=>{s.el=sceneRoot(s.id,SC[s.id].html)});
+const FADE=0.45;
+const NOMARK={intro:1,outro:1};
+const BLOBS={hook:['#FECACA','#E2E8F0'],intro:['#BBF7D0','#BBF7D0'],how:['#BBF7D0','#BFDBFE'],home:['#BBF7D0','#BFDBFE'],places:['#BFDBFE','#BBF7D0'],test:['#BBF7D0','#FECACA'],connect:['#BFDBFE','#BBF7D0'],voice:['#FDE68A','#FEF3C7'],trust:['#E2E8F0','#FDE68A'],helper:['#E2E8F0','#BFDBFE'],outro:['#BBF7D0','#FDE68A']};
+function render(T){
+  let cur=null;
+  TL.scenes.forEach((s,i)=>{
+    const lt=T-s.start, vis=lt>=-0.001&&lt<s.dur+FADE&&!(i==TL.scenes.length-1&&false);
+    s.el.style.display=vis?'block':'none';
+    if(!vis)return;
+    const fin=i==0?ramp(lt,0,.6):ramp(lt,0,FADE);
+    const fout=i==TL.scenes.length-1?1-ramp(lt,s.dur-0.6,.6):1;
+    s.el.style.opacity=fin*fout; s.el.style.zIndex=i+1;
+    SC[s.id].render(s.el,lt,s);
+    if(lt<s.dur)cur={s,lt};
+  });
+  // corner mark
+  const m=$('#mark'); m.style.opacity=cur&&!NOMARK[cur.s.id]?1:0;
+  // background blobs drift
+  if(cur){const b=BLOBS[cur.s.id];$('#blobA').style.background=b[0];$('#blobB').style.background=b[1]}
+  $('#blobA').style.transform=`translate(${Math.sin(T*.2)*60}px,${Math.cos(T*.17)*40}px)`;
+  $('#blobB').style.transform=`translate(${Math.cos(T*.15)*60}px,${Math.sin(T*.21)*40}px)`;
+  // subtitles
+  let sub='';
+  if(cur){for(const [a,b,x] of cur.s.subs){if(cur.lt>=a-0.05&&cur.lt<b+0.25)sub=x}}
+  const sp=$('#subs span'); sp.textContent=sub; sp.style.display=sub?'inline-block':'none';
+  // phone float
+  document.querySelectorAll('.phone').forEach(p=>p.style.transform=`translateY(${Math.sin(T*1.1)*6}px)`);
+}
+window.render=render;
+render(0);
+</script>
+</body>
+</html>
