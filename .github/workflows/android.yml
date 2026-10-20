@@ -9,9 +9,9 @@ on:
 jobs:
   native-tests:
     name: Sound engine tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build and run the C++ sound engine tests
         run: |
           cmake -S native-tests -B native-tests/build -DCMAKE_BUILD_TYPE=Release
@@ -20,21 +20,26 @@ jobs:
 
   apk:
     name: Build APK
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04      # comes with the Android SDK preinstalled
     needs: native-tests
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
 
-      - uses: android-actions/setup-android@v3
-
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.14.3
+
+      - name: Point Gradle at the Android SDK
+        run: |
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "sdk.dir=$SDK" > local.properties
+          echo "Android SDK: $SDK"
+          ls "$SDK" || true
 
       - name: Decode signing key (only if the secret is set)
         env:
@@ -49,15 +54,22 @@ jobs:
           SUNAI_KEYSTORE_PASSWORD: ${{ secrets.SUNAI_KEYSTORE_PASSWORD }}
           SUNAI_KEY_ALIAS: ${{ secrets.SUNAI_KEY_ALIAS }}
           SUNAI_KEY_PASSWORD: ${{ secrets.SUNAI_KEY_PASSWORD }}
-        run: gradle --no-daemon assembleDebug assembleRelease
+        run: |
+          set -o pipefail
+          if ! gradle --no-daemon --console=plain assembleDebug assembleRelease 2>&1 | tee build.log; then
+            # Surface the real errors as annotations (visible on the run page and via the API).
+            grep -E "^e: |error:|ERROR:|What went wrong|FAILED|> " build.log | grep -v "^> Task" | head -40 | \
+              while IFS= read -r line; do echo "::error::${line//%/%25}"; done
+            exit 1
+          fi
 
       - name: Report APK sizes
         run: |
           echo "### APK sizes" >> "$GITHUB_STEP_SUMMARY"
           for f in app/build/outputs/apk/*/*.apk; do
             echo "- $(basename "$f"): $(du -h "$f" | cut -f1)" >> "$GITHUB_STEP_SUMMARY"
+            echo "::notice::$(basename "$f") is $(du -h "$f" | cut -f1)"
           done
-          cat "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v4
         with:
