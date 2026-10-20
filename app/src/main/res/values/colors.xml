@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One colour = one meaning, everywhere in the app (see the design's guide board). -->
+<resources>
+    <color name="green">#FF15803D</color>      <!-- ON, heard, connected, fast -->
+    <color name="green_soft">#FFDCFCE7</color>
+    <color name="green_ring">#FFBBF7D0</color>
+    <color name="green_text">#FF14532D</color>
+    <color name="red">#FFB91C1C</color>        <!-- OFF, not heard -->
+    <color name="red_ring">#FFFECACA</color>
+    <color name="blue">#FF1D4ED8</color>       <!-- volume, choosing, Bluetooth -->
+    <color name="blue_soft">#FFDBEAFE</color>
+    <color name="blue_ring">#FF93C5FD</color>
+    <color name="amber">#FFB45309</color>      <!-- voice help, warnings, slow -->
+    <color name="amber_soft">#FFFEF3C7</color>
+    <color name="amber_ring">#FFFDE68A</color>
+    <color name="amber_text">#FF78350F</color>
+    <color name="ink">#FF0F172A</color>        <!-- text, helper -->
+    <color name="muted">#FF475569</color>
+    <color name="nav_idle">#FF334155</color>
+    <color name="line">#FFCBD5E1</color>
+    <color name="track">#FFE2E8F0</color>
+    <color name="toggle_off">#FF94A3B8</color>
+    <color name="ground">#FFF1F5F9</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>

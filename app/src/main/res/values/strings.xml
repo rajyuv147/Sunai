@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nepali is the default (and only) UI language: words are small hints under
+     pictures, mainly for helpers. Spoken help covers people who cannot read. -->
+<resources>
+    <string name="app_name">सुनाइ</string>
+
+    <!-- Home -->
+    <string name="state_on">खुला</string>
+    <string name="state_off">बन्द</string>
+    <string name="a11y_turn_on">सुनाइ खोल्नुहोस्</string>
+    <string name="a11y_turn_off">सुनाइ बन्द गर्नुहोस्</string>
+    <string name="a11y_vol_down">आवाज कम</string>
+    <string name="a11y_vol_up">आवाज बढी</string>
+    <string name="a11y_earphone">इयरफोन</string>
+    <string name="place_home">घर</string>
+    <string name="place_talk">कुरा</string>
+    <string name="place_crowd">भीड</string>
+    <string name="voice_btn">सुन्नुस्</string>
+    <string name="voice_btn_speaking">बोल्दै…</string>
+    <string name="saver_badge">ब्याट्री बचत</string>
+
+    <!-- Navigation -->
+    <string name="nav_listen">सुन्ने</string>
+    <string name="nav_test">जाँच</string>
+    <string name="nav_helper">सहयोगी</string>
+    <string name="a11y_back">पछाडि</string>
+
+    <!-- Connect -->
+    <string name="step_open_case">बट्टा खोल्नुस्</string>
+    <string name="step_press_blue">नीलो थिच्नुस्</string>
+    <string name="step_wear">कानमा लाउनुस्</string>
+    <string name="connect_btn">जोड्नुहोस्</string>
+    <string name="connect_done">जोडियो</string>
+    <string name="speed_fast">छिटो — राम्रो</string>
+    <string name="speed_fast_hint">यो इयरफोन ठीक छ</string>
+    <string name="speed_slow">ढिलो — आवाज पछि आउँछ</string>
+    <string name="speed_slow_hint">तारवाला इयरफोन लगाउनुहोस्</string>
+    <string name="wired_best">तारवाला इयरफोन सबैभन्दा छिटो</string>
+
+    <!-- Ear test -->
+    <string name="ear_left">बायाँ</string>
+    <string name="ear_right">दायाँ</string>
+    <string name="heard">सुनें</string>
+    <string name="not_heard">सुनिनँ</string>
+    <string name="a11y_play_tone">आवाज बजाउनुहोस्</string>
+    <string name="test_done">मिलाइयो</string>
+    <string name="again">फेरि</string>
+    <string name="forward">अगाडि</string>
+
+    <!-- Helper -->
+    <string name="helper_title">सहयोगी</string>
+    <string name="helper_sub">परिवारका सदस्यले मिलाउने</string>
+    <string name="helper_locked">गल्तीले नबिग्रियोस् भनेर यो भाग बन्द छ।</string>
+    <string name="helper_unlock">खोल्न ३ सेकेन्ड थिचिराख्नुहोस्</string>
+    <string name="helper_lock_again">फेरि बन्द गर्नुहोस्</string>
+    <string name="helper_voice_lang">बोल्ने भाषा</string>
+    <string name="helper_balance">दुई कानको सन्तुलन</string>
+    <string name="helper_low_delay">कम ढिलाइ मोड</string>
+    <string name="helper_low_delay_sub">छिटो सुनिन्छ, AI हल्ला सफा बन्द</string>
+    <string name="helper_safety">कान सुरक्षा</string>
+    <string name="helper_safety_sub">चर्को आवाज आफैं घटाउँछ</string>
+    <string name="helper_saver">ब्याट्री बचत</string>
+    <string name="helper_saver_sub">AI हल्ला सफा बन्द, ब्याट्री धेरै चल्छ</string>
+    <string name="helper_status">स्थिति</string>
+    <string name="lang_ne">नेपाली</string>
+    <string name="lang_mai">मैथिली</string>
+    <string name="lang_bho">भोजपुरी</string>
+    <string name="lang_tha">थारू</string>
+    <string name="not_medical">यो चिकित्सकीय उपकरण होइन। कान दुखे, पीप आए वा अचानक सुन्न छाडे स्वास्थ्य चौकी जानुहोस्।</string>
+
+    <!-- Notification -->
+    <string name="notif_channel">सुनाइ चलिरहेको</string>
+    <string name="notif_text">माइकले सुनेर इयरफोनमा पठाउँदै छ। रेकर्ड हुँदैन।</string>
+
+    <!-- Spoken help (used by text-to-speech until recorded clips are added) -->
+    <string name="say_home">ठूलो गोलो बटन थिच्दा सुनाइ खुल्छ। नीलो बटनले आवाज घटाउने बढाउने गर्छ। तलका चित्रले ठाउँ छान्छ।</string>
+    <string name="say_connect">पहिले इयरफोनको बट्टा खोल्नुहोस्। अनि नीलो बटन थिच्नुहोस्। अनि इयरफोन कानमा लगाउनुहोस्।</string>
+    <string name="say_test">एउटा कान छान्नुहोस्। ठूलो बटन थिचेर आवाज सुन्नुहोस्। सुन्नुभयो भने हरियो, सुन्नुभएन भने रातो थिच्नुहोस्।</string>
+    <string name="say_helper">यो भाग परिवारको सदस्यले मिलाउने हो। खोल्न तलको बटन तीन सेकेन्ड थिचिराख्नुहोस्।</string>
+    <string name="say_no_earphone">पहिले इयरफोन लगाउनुहोस्।</string>
+    <string name="say_connected">इयरफोन जोडियो।</string>
+    <string name="say_saver_on">ब्याट्री कम भयो। ब्याट्री बचत खुल्यो।</string>
+    <string name="say_loud">धेरै बेरदेखि आवाज ठूलो छ। कानलाई आराम दिन आवाज अलि घटाउनुहोस्।</string>
+    <string name="say_test_done">जाँच सकियो। आवाज तपाईंको कानअनुसार मिलाइयो।</string>
+</resources>

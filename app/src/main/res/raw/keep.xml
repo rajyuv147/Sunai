@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Voice clips are looked up by name at runtime (voice_<lang>_<key>), so tell
+     the resource shrinker to keep every raw file. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@raw/*" />
