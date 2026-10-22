@@ -22,7 +22,7 @@
     <color name="toggle_off">#FF94A3B8</color>
     <color name="ground">#FFE9EEF4</color>     <!-- darker than white cards, so cards stand out in sunlight -->
     <color name="card_line">#FFCBD5E1</color>
-    <color name="tile">#FFF3F6FA</color>
+    <color name="tile">#FFE6ECF3</color>
     <color name="green_dark">#FF166534</color>
     <color name="white">#FFFFFFFF</color>
 </resources>

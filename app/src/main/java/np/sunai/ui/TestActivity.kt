@@ -173,7 +173,7 @@ class TestActivity : BaseActivity() {
         }
         findViewById<View>(R.id.test_dots).contentDescription = "${minOf(step + 1, Sunai.BANDS)} / ${Sunai.BANDS}"
         levelBars.forEachIndexed { i, b ->
-            b.background = Ui.round(this, Ui.color(this, if (i <= levelIndex) R.color.blue else R.color.track), 4f)
+            b.background = Ui.round(this, Ui.color(this, if (i <= levelIndex) R.color.blue else R.color.card_line), 4f)
         }
         stylePlay(NativeAudio.isTonePlaying())
     }
