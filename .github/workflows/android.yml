@@ -111,3 +111,54 @@ jobs:
           git -c user.name="sunai-ci" -c user.email="ci@sunai.invalid" add .
           git -c user.name="sunai-ci" -c user.email="ci@sunai.invalid" commit -q -m "APK from ${{ github.sha }} ($TAG)"
           git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}" apk
+
+  screenshots:
+    name: Screenshots (emulator)
+    runs-on: ubuntu-24.04
+    needs: native-tests
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Download the RNNoise 0.2 noise-removal model
+        run: bash scripts/fetch_rnnoise_model.sh || true
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.14.3
+
+      - name: Build debug APK for the emulator (adds x86_64)
+        run: |
+          echo "sdk.dir=${ANDROID_HOME:-/usr/local/lib/android/sdk}" > local.properties
+          gradle --no-daemon --console=plain assembleDebug -Psunai.allAbis=true
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run the app in an emulator and take screenshots
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          target: google_apis
+          profile: pixel_3a
+          disable-animations: true
+          script: bash scripts/screenshots.sh
+
+      - name: Publish screenshots to the screens branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd shots
+          git init -q -b screens
+          git -c user.name="sunai-ci" -c user.email="ci@sunai.invalid" add .
+          git -c user.name="sunai-ci" -c user.email="ci@sunai.invalid" commit -q -m "Screenshots from ${{ github.sha }}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}" screens

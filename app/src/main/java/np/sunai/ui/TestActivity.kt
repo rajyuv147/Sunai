@@ -77,6 +77,7 @@ class TestActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (Ui.isDebug(this) && intent.getBooleanExtra("demo", false)) { refresh(); return }
         if (!Sunai.beginTest()) {
             goTo(ConnectActivity::class.java)
             finish()
@@ -155,7 +156,8 @@ class TestActivity : BaseActivity() {
         for ((id, index) in listOf(R.id.ear_left to 0, R.id.ear_right to 1)) {
             val tile = findViewById<LinearLayout>(id)
             val sel = index == ear
-            tile.background = Ui.round(this, Ui.color(this, if (sel) R.color.blue else R.color.white), 26f)
+            tile.background = if (sel) Ui.round(this, Ui.color(this, R.color.blue), 26f)
+                else Ui.round(this, Ui.color(this, R.color.white), 26f, Ui.color(this, R.color.card_line), 1.5f)
             val fg = Ui.color(this, if (sel) R.color.white else R.color.muted)
             Ui.tint(tile.getChildAt(0) as ImageView, fg)
             (tile.getChildAt(1) as TextView).setTextColor(fg)

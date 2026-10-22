@@ -11,12 +11,14 @@ android {
         applicationId = "np.sunai"
         minSdk = 27            // Android 8.1: first version with the fast (MMAP) audio path
         targetSdk = 35
-        versionCode = 7
-        versionName = "0.2.2"
+        versionCode = 8
+        versionName = "0.3.0"
 
         ndk {
             // Only the processors real phones use. Keeps the APK small.
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+            // -Psunai.allAbis=true adds x86_64, only for emulator screenshots in CI.
+            if (project.findProperty("sunai.allAbis") == "true") abiFilters += "x86_64"
         }
 
         externalNativeBuild {

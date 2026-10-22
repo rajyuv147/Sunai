@@ -9,6 +9,15 @@
         <item name="android:colorAccent">@color/blue</item>
         <item name="android:textColor">@color/ink</item>
         <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:textViewStyle">@style/Sunai.TextView</item>
+    </style>
+
+    <!-- elegantTextHeight gives Devanagari room for vowel marks above and below
+         the letters (otherwise "खुला" can be clipped to "खला"). -->
+    <style name="Sunai.TextView" parent="android:Widget.TextView">
+        <item name="android:elegantTextHeight">true</item>
+        <item name="android:includeFontPadding">true</item>
+        <item name="android:fallbackLineSpacing">true</item>
     </style>
 
     <!-- Root for the dotted style names below. -->
@@ -66,9 +75,34 @@
         <item name="android:layout_marginStart">5dp</item>
         <item name="android:layout_marginEnd">5dp</item>
     </style>
+    <!-- Place tiles on the home screen (4 in a row inside a card) -->
+    <style name="Sunai.PlaceTile">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">88dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginStart">4dp</item>
+        <item name="android:layout_marginEnd">4dp</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">center</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+    <style name="Sunai.PlaceIcon">
+        <item name="android:layout_width">38dp</item>
+        <item name="android:layout_height">38dp</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+    <style name="Sunai.PlaceLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
     <style name="Sunai.Card">
         <item name="android:background">@drawable/bg_card</item>
         <item name="android:padding">14dp</item>
+        <item name="android:elevation">2dp</item>
     </style>
     <!-- Voice-language chips on the helper screen -->
     <style name="Sunai.LangChip">
@@ -86,6 +120,7 @@
         <item name="android:layout_width">64dp</item>
         <item name="android:layout_height">64dp</item>
         <item name="android:background">@drawable/bg_white_circle</item>
+        <item name="android:elevation">2dp</item>
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
         <item name="android:contentDescription">@string/a11y_back</item>
