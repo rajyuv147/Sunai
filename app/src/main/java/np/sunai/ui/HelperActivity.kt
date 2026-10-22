@@ -188,6 +188,7 @@ class HelperActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (Ui.isDebug(this) && intent.getBooleanExtra("unlock", false)) { locked = false; refresh() }
         handler.post(statusTick)
     }
 

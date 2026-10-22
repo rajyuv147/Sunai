@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Home: one huge on/off ear, volume pictures, place pictures. -->
+<!-- Home: earphone status + help on top, one huge ear button with a live sound
+     ring, a clear ON/OFF pill, a volume staircase and the place pictures. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     android:orientation="vertical">
 
-    <!-- Top: earphone status pill + voice help -->
+    <!-- Top: earphone status + voice help -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="18dp"
+        android:paddingStart="16dp"
         android:paddingTop="12dp"
-        android:paddingEnd="18dp">
+        android:paddingEnd="16dp">
 
         <LinearLayout
             android:id="@+id/earphone_pill"
@@ -23,27 +24,28 @@
             android:clickable="true"
             android:focusable="true"
             android:contentDescription="@string/a11y_earphone"
+            android:elevation="2dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="10dp"
-            android:paddingEnd="14dp">
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp">
 
             <ImageView
-                android:layout_width="34dp"
-                android:layout_height="34dp"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
                 android:importantForAccessibility="no"
                 android:src="@drawable/ic_earbud"
                 android:tint="@color/ink" />
 
             <FrameLayout
                 android:id="@+id/earphone_status_bg"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
                 android:layout_marginStart="8dp">
                 <ImageView
                     android:id="@+id/earphone_status_icon"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:layout_gravity="center"
                     android:importantForAccessibility="no"
                     android:src="@drawable/ic_check"
@@ -52,34 +54,34 @@
 
             <ImageView
                 android:id="@+id/earphone_speed"
-                android:layout_width="26dp"
-                android:layout_height="26dp"
-                android:layout_marginStart="8dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginStart="6dp"
                 android:importantForAccessibility="no"
                 android:src="@drawable/ic_bolt" />
         </LinearLayout>
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
 
         <!-- Shown when battery saver is on -->
         <ImageView
             android:id="@+id/saver_badge"
             android:layout_width="44dp"
             android:layout_height="44dp"
-            android:layout_marginEnd="10dp"
+            android:layout_marginStart="8dp"
             android:contentDescription="@string/saver_badge"
             android:padding="9dp"
             android:src="@drawable/ic_battery"
             android:tint="@color/amber"
             android:visibility="gone" />
 
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
         <include layout="@layout/voice_button" />
     </LinearLayout>
 
-    <!-- Centre: the big ear button -->
+    <!-- Centre: sound ring + big ear button + ON/OFF pill -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -88,51 +90,62 @@
         android:orientation="vertical">
 
         <FrameLayout
-            android:id="@+id/big_button"
-            android:layout_width="250dp"
-            android:layout_height="250dp"
-            android:clickable="true"
-            android:focusable="true">
-            <ImageView
-                android:id="@+id/big_icon"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:layout_gravity="center"
-                android:importantForAccessibility="no" />
-        </FrameLayout>
+            android:layout_width="280dp"
+            android:layout_height="280dp">
 
-        <LinearLayout
-            android:id="@+id/meter"
-            android:layout_width="wrap_content"
-            android:layout_height="34dp"
-            android:layout_marginTop="12dp"
-            android:gravity="center_vertical"
-            android:importantForAccessibility="no"
-            android:orientation="horizontal" />
+            <np.sunai.ui.LevelRing
+                android:id="@+id/level_ring"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:importantForAccessibility="no" />
+
+            <FrameLayout
+                android:id="@+id/big_button"
+                android:layout_width="220dp"
+                android:layout_height="220dp"
+                android:layout_gravity="center"
+                android:clickable="true"
+                android:elevation="6dp"
+                android:focusable="true">
+                <ImageView
+                    android:id="@+id/big_icon"
+                    android:layout_width="116dp"
+                    android:layout_height="116dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no" />
+            </FrameLayout>
+        </FrameLayout>
 
         <TextView
             android:id="@+id/state_word"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textSize="28sp"
+            android:layout_marginTop="4dp"
+            android:paddingStart="28dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="28dp"
+            android:paddingBottom="8dp"
+            android:textColor="@color/white"
+            android:textSize="24sp"
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- Volume: quieter / bars / louder -->
+    <!-- Volume: quieter / staircase / louder -->
     <LinearLayout
         style="@style/Sunai.Card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="18dp"
-        android:layout_marginEnd="18dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp">
 
         <FrameLayout
             android:id="@+id/vol_down"
-            android:layout_width="76dp"
-            android:layout_height="76dp"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
             android:clickable="true"
             android:focusable="true"
             android:contentDescription="@string/a11y_vol_down">
@@ -148,23 +161,24 @@
         <LinearLayout
             android:id="@+id/vol_bars"
             android:layout_width="0dp"
-            android:layout_height="64dp"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="12dp"
+            android:layout_height="60dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
             android:layout_weight="1"
             android:gravity="bottom"
             android:orientation="horizontal" />
 
         <FrameLayout
             android:id="@+id/vol_up"
-            android:layout_width="76dp"
-            android:layout_height="76dp"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
             android:clickable="true"
             android:focusable="true"
-            android:contentDescription="@string/a11y_vol_up">
+            android:contentDescription="@string/a11y_vol_up"
+            android:elevation="3dp">
             <ImageView
-                android:layout_width="38dp"
-                android:layout_height="38dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:layout_gravity="center"
                 android:importantForAccessibility="no"
                 android:src="@drawable/ic_vol_up"
@@ -174,44 +188,38 @@
 
     <!-- Place: auto (AI) / home / talk / crowd -->
     <LinearLayout
+        style="@style/Sunai.Card"
         android:layout_width="match_parent"
-        android:layout_height="96dp"
-        android:layout_marginStart="13dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="12dp"
-        android:layout_marginEnd="13dp"
+        android:layout_marginEnd="16dp"
         android:layout_marginBottom="14dp"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="8dp">
 
-        <LinearLayout android:id="@+id/place_auto" style="@style/Sunai.Tile"
-            android:layout_height="match_parent" android:contentDescription="@string/place_auto">
-            <ImageView android:layout_width="40dp" android:layout_height="40dp"
-                android:importantForAccessibility="no" android:src="@drawable/ic_auto" />
-            <TextView style="@style/Sunai.Word" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:text="@string/place_auto" />
+        <LinearLayout android:id="@+id/place_auto" style="@style/Sunai.PlaceTile"
+            android:contentDescription="@string/place_auto">
+            <ImageView style="@style/Sunai.PlaceIcon" android:src="@drawable/ic_auto" />
+            <TextView style="@style/Sunai.PlaceLabel" android:text="@string/place_auto" />
         </LinearLayout>
 
-        <LinearLayout android:id="@+id/place_home" style="@style/Sunai.Tile"
-            android:layout_height="match_parent" android:contentDescription="@string/place_home">
-            <ImageView android:layout_width="40dp" android:layout_height="40dp"
-                android:importantForAccessibility="no" android:src="@drawable/ic_place_home" />
-            <TextView style="@style/Sunai.Word" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:text="@string/place_home" />
+        <LinearLayout android:id="@+id/place_home" style="@style/Sunai.PlaceTile"
+            android:contentDescription="@string/place_home">
+            <ImageView style="@style/Sunai.PlaceIcon" android:src="@drawable/ic_place_home" />
+            <TextView style="@style/Sunai.PlaceLabel" android:text="@string/place_home" />
         </LinearLayout>
 
-        <LinearLayout android:id="@+id/place_talk" style="@style/Sunai.Tile"
-            android:layout_height="match_parent" android:contentDescription="@string/place_talk">
-            <ImageView android:layout_width="40dp" android:layout_height="40dp"
-                android:importantForAccessibility="no" android:src="@drawable/ic_place_talk" />
-            <TextView style="@style/Sunai.Word" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:text="@string/place_talk" />
+        <LinearLayout android:id="@+id/place_talk" style="@style/Sunai.PlaceTile"
+            android:contentDescription="@string/place_talk">
+            <ImageView style="@style/Sunai.PlaceIcon" android:src="@drawable/ic_place_talk" />
+            <TextView style="@style/Sunai.PlaceLabel" android:text="@string/place_talk" />
         </LinearLayout>
 
-        <LinearLayout android:id="@+id/place_crowd" style="@style/Sunai.Tile"
-            android:layout_height="match_parent" android:contentDescription="@string/place_crowd">
-            <ImageView android:layout_width="40dp" android:layout_height="40dp"
-                android:importantForAccessibility="no" android:src="@drawable/ic_place_crowd" />
-            <TextView style="@style/Sunai.Word" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:text="@string/place_crowd" />
+        <LinearLayout android:id="@+id/place_crowd" style="@style/Sunai.PlaceTile"
+            android:contentDescription="@string/place_crowd">
+            <ImageView style="@style/Sunai.PlaceIcon" android:src="@drawable/ic_place_crowd" />
+            <TextView style="@style/Sunai.PlaceLabel" android:text="@string/place_crowd" />
         </LinearLayout>
     </LinearLayout>
 

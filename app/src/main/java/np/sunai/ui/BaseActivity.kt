@@ -54,10 +54,13 @@ abstract class BaseActivity : Activity() {
         val btn = findViewById<View>(R.id.voice_btn) ?: return
         val icon = findViewById<ImageView>(R.id.voice_icon)
         val label = findViewById<TextView>(R.id.voice_label)
-        val fill = Ui.color(this, if (speaking) R.color.amber else R.color.amber_soft)
-        val ring = Ui.color(this, if (speaking) R.color.amber_ring else R.color.amber_soft)
-        val fg = Ui.color(this, if (speaking) R.color.white else R.color.amber_text)
-        btn.background = Ui.circle(this, fill, ring, 4f)
+        // Solid amber pill; while speaking it gets a bright ring.
+        val fill = Ui.color(this, R.color.amber)
+        val fg = Ui.color(this, R.color.white)
+        btn.background = if (speaking)
+            Ui.round(this, fill, 28f, Ui.color(this, R.color.amber_ring), 4f)
+        else
+            Ui.round(this, fill, 28f)
         Ui.tint(icon, fg)
         label.setTextColor(fg)
         label.setText(if (speaking) R.string.voice_btn_speaking else R.string.voice_btn)

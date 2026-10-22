@@ -14,6 +14,10 @@ object Ui {
 
     fun color(context: Context, res: Int): Int = context.getColor(res)
 
+    /** True only in debug builds (used for automated screenshots). */
+    fun isDebug(context: Context): Boolean =
+        (context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
+
     fun circle(context: Context, fill: Int, ring: Int = 0, ringDp: Float = 0f) = GradientDrawable().apply {
         shape = GradientDrawable.OVAL
         setColor(fill)

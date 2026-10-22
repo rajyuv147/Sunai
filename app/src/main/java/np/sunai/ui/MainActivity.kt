@@ -1,6 +1,7 @@
 package np.sunai.ui
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -24,9 +25,8 @@ class MainActivity : BaseActivity() {
     private lateinit var bigButton: FrameLayout
     private lateinit var bigIcon: ImageView
     private lateinit var stateWord: TextView
-    private lateinit var meter: LinearLayout
+    private lateinit var ring: LevelRing
     private lateinit var volBars: LinearLayout
-    private val meterBars = mutableListOf<View>()
     private val volumeBars = mutableListOf<View>()
     private val places by lazy {
         listOf(findViewById<LinearLayout>(R.id.place_home),
@@ -47,10 +47,9 @@ class MainActivity : BaseActivity() {
         bigButton = findViewById(R.id.big_button)
         bigIcon = findViewById(R.id.big_icon)
         stateWord = findViewById(R.id.state_word)
-        meter = findViewById(R.id.meter)
+        ring = findViewById(R.id.level_ring)
         volBars = findViewById(R.id.vol_bars)
 
-        buildMeter()
         buildVolumeBars()
         setupVoiceButton()
         setupNav(0)
@@ -61,11 +60,11 @@ class MainActivity : BaseActivity() {
         places.forEachIndexed { i, tile -> tile.setOnClickListener { Sunai.pickPlace(i) } }
         autoTile.setOnClickListener { Sunai.setAutoPlace(true) }
         findViewById<View>(R.id.earphone_pill).setOnClickListener { goTo(ConnectActivity::class.java) }
+        openForScreenshot()
 
         // Static backgrounds
-        findViewById<View>(R.id.earphone_pill).background = Ui.round(this, Ui.color(this, R.color.white), 28f)
         findViewById<View>(R.id.vol_down).background =
-            Ui.circle(this, Ui.color(this, R.color.white), Ui.color(this, R.color.blue), 3f)
+            Ui.circle(this, Ui.color(this, R.color.blue_soft), Ui.color(this, R.color.blue), 3f)
         findViewById<View>(R.id.vol_up).background = Ui.circle(this, Ui.color(this, R.color.blue))
     }
 
@@ -107,9 +106,10 @@ class MainActivity : BaseActivity() {
     override fun refresh() {
         val on = Sunai.listening
         bigButton.background = if (on)
-            Ui.circle(this, Ui.color(this, R.color.green), Ui.color(this, R.color.green_ring), 14f)
+            Ui.circle(this, Ui.color(this, R.color.green), Ui.color(this, R.color.white), 6f)
         else
-            Ui.circle(this, Ui.color(this, R.color.white), Ui.color(this, R.color.red_ring), 14f)
+            Ui.circle(this, Ui.color(this, R.color.white), Ui.color(this, R.color.red), 6f)
+        ring.setActive(on, Ui.color(this, if (on) R.color.green else R.color.red))
         if (on) {
             bigIcon.setImageResource(R.drawable.ic_ear_on)
             Ui.tint(bigIcon, Ui.color(this, R.color.white))
@@ -118,13 +118,15 @@ class MainActivity : BaseActivity() {
             bigIcon.imageTintList = null
         }
         bigButton.contentDescription = getString(if (on) R.string.a11y_turn_off else R.string.a11y_turn_on)
+        // ON/OFF as a solid coloured pill: readable from a distance and in sunlight.
         stateWord.setText(if (on) R.string.state_on else R.string.state_off)
-        stateWord.setTextColor(Ui.color(this, if (on) R.color.green else R.color.red))
+        stateWord.background = Ui.round(this, Ui.color(this, if (on) R.color.green else R.color.red), 24f)
 
         // Volume bars
         val vol = Sunai.prefs.volume
         volumeBars.forEachIndexed { i, bar ->
-            bar.background = Ui.round(this, Ui.color(this, if (i < vol) R.color.blue else R.color.track), 8f)
+            bar.background = if (i < vol) Ui.round(this, Ui.color(this, R.color.blue), 8f)
+                             else Ui.round(this, Ui.color(this, R.color.tile), 8f, Ui.color(this, R.color.card_line), 1.5f)
         }
         volBars.contentDescription = "$vol / 5"
 
@@ -142,16 +144,16 @@ class MainActivity : BaseActivity() {
             speed.visibility = View.VISIBLE
             speed.setImageResource(if (ear.kind.fast) R.drawable.ic_bolt else R.drawable.ic_hourglass)
             Ui.tint(speed, Ui.color(this, if (ear.kind.fast) R.color.green else R.color.amber))
-            pill.background = Ui.round(this, Ui.color(this, R.color.white), 28f, Ui.color(this, R.color.green), 2f)
+            pill.background = Ui.round(this, Ui.color(this, R.color.white), 28f, Ui.color(this, R.color.green), 3f)
         } else {
             statusBg.background = Ui.circle(this, Ui.color(this, R.color.amber))
             statusIcon.setImageResource(R.drawable.ic_bluetooth)
             speed.visibility = View.GONE
-            pill.background = Ui.round(this, Ui.color(this, R.color.white), 28f, Ui.color(this, R.color.amber), 2f)
+            pill.background = Ui.round(this, Ui.color(this, R.color.white), 28f, Ui.color(this, R.color.amber), 3f)
         }
 
         findViewById<View>(R.id.saver_badge).visibility = if (Sunai.saverOn) View.VISIBLE else View.GONE
-        drawMeter(if (on) NativeAudio.getLevel() else 0f)
+        if (on) ring.setLevel(NativeAudio.getLevel())
     }
 
     /**
@@ -172,55 +174,27 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    /** level 0 = plain, 1 = light highlight (AI's choice), 2 = selected */
+    /** level 0 = plain, 1 = outlined (the AI's choice), 2 = selected (solid blue) */
     private fun styleTile(tile: LinearLayout, level: Int) {
-        val (bg, fg) = when (level) {
-            2 -> R.color.blue to R.color.white
-            1 -> R.color.blue_soft to R.color.blue
-            else -> R.color.white to R.color.ink
+        val fg = when (level) { 2 -> R.color.white; 1 -> R.color.blue; else -> R.color.ink }
+        tile.background = when (level) {
+            2 -> Ui.round(this, Ui.color(this, R.color.blue), 18f)
+            1 -> Ui.round(this, Ui.color(this, R.color.blue_soft), 18f, Ui.color(this, R.color.blue), 3f)
+            else -> Ui.round(this, Ui.color(this, R.color.tile), 18f)
         }
-        tile.background = Ui.round(this, Ui.color(this, bg), 22f)
         Ui.tint(tile.getChildAt(0) as ImageView, Ui.color(this, fg))
         (tile.getChildAt(1) as TextView).setTextColor(Ui.color(this, fg))
         tile.isSelected = level == 2
     }
 
-    private fun buildMeter() {
-        val w = Ui.dp(this, 7f)
-        repeat(11) {
-            val v = View(this)
-            val lp = LinearLayout.LayoutParams(w, Ui.dp(this, 6f))
-            lp.marginStart = Ui.dp(this, 2.5f); lp.marginEnd = Ui.dp(this, 2.5f)
-            meter.addView(v, lp)
-            meterBars += v
-        }
-    }
-
     private fun buildVolumeBars() {
+        // A staircase: each step taller, like loudness growing.
         for (i in 1..5) {
             val v = View(this)
-            val lp = LinearLayout.LayoutParams(0, Ui.dp(this, 12f + i * 10f), 1f)
+            val lp = LinearLayout.LayoutParams(0, Ui.dp(this, 16f + i * 8.8f), 1f)
             lp.marginStart = Ui.dp(this, 3f); lp.marginEnd = Ui.dp(this, 3f)
             volBars.addView(v, lp)
             volumeBars += v
-        }
-    }
-
-    private val shape = floatArrayOf(0.3f, 0.5f, 0.75f, 1f, 0.7f, 0.9f, 0.6f, 0.85f, 0.55f, 0.4f, 0.3f)
-
-    private var meterColoredOn: Boolean? = null
-
-    private fun drawMeter(level: Float) {
-        val on = Sunai.listening
-        if (meterColoredOn != on) {   // only recolour when the state changes
-            val color = Ui.color(this, if (on) R.color.green else R.color.line)
-            meterBars.forEach { it.background = Ui.round(this, color, 4f) }
-            meterColoredOn = on
-        }
-        meterBars.forEachIndexed { i, bar ->
-            val h = Ui.dp(this, if (on) 6f + 28f * shape[i] * level else 6f)
-            val lp = bar.layoutParams
-            if (lp.height != h) { lp.height = h; bar.layoutParams = lp }
         }
     }
 
@@ -228,12 +202,24 @@ class MainActivity : BaseActivity() {
         override fun run() {
             if (!resumed) return
             if (Sunai.listening) {
-                drawMeter(NativeAudio.getLevel())
+                ring.setLevel(NativeAudio.getLevel())
                 // The AI may have switched place: update the highlight.
                 if (Sunai.prefs.autoPlace && Sunai.currentPlace != shownPlace) drawPlaces()
             }
-            handler.postDelayed(this, 80)
+            handler.postDelayed(this, 60)
         }
+    }
+
+    /** Debug builds only: `adb shell am start ... --es open helper` opens a screen for screenshots. */
+    private fun openForScreenshot() {
+        if (!Ui.isDebug(this)) return
+        val target = when (intent.getStringExtra("open")) {
+            "connect" -> ConnectActivity::class.java
+            "test" -> TestActivity::class.java
+            "helper" -> HelperActivity::class.java
+            else -> return
+        }
+        startActivity(Intent(this, target).putExtras(intent))
     }
 
     companion object {
