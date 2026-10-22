@@ -49,6 +49,8 @@ public:
     void setParams(float gainDb, float kneeDb, float ratio, float floorDb) {
         mGainDb = gainDb; mKneeDb = kneeDb; mRatio = std::max(1.0f, ratio); mFloorDb = floorDb;
     }
+    // Moves the silence gate (set from the measured background hiss level).
+    void setFloor(float floorDb) { mFloorDb = floorDb; }
     // Returns true while the input is below the noise floor (silence).
     bool silent() const { return mSilent; }
 
@@ -60,8 +62,9 @@ public:
         }
         mSilent = levelDb < mFloorDb;
         if (mSilent) {
-            // Gentle downward expansion below the floor (mic hiss), capped at -12 dB.
-            g -= std::min(12.0f, 0.5f * (mFloorDb - levelDb));
+            // Downward expansion below the floor: mic hiss and steady background are
+            // not amplified (1.5 dB less gain per dB below the floor, up to 24 dB).
+            g -= std::min(24.0f, 1.5f * (mFloorDb - levelDb));
         }
         float target = dbToLin(g);
         mGain = mGainSmooth * mGain + (1.0f - mGainSmooth) * target;

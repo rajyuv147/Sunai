@@ -63,6 +63,9 @@ private:
 
     std::mutex mLock;
     std::shared_ptr<oboe::AudioStream> mIn, mOut;
+    // Grows the earphone buffer a little if the phone cannot keep up (prevents crackling).
+    std::unique_ptr<oboe::LatencyTuner> mTuner;
+    std::atomic<float> mCpuLoad{0.0f};   // share of each audio period spent processing
     Processor mProcessor;
 
     // Ring buffer (single producer: mic thread, single consumer: earphone thread).

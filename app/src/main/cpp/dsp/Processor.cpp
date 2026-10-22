@@ -25,9 +25,9 @@ struct PlacePreset {
 // Talk: one-to-one conversation, AI noise reduction on.
 // Crowd: market or bus, stronger low-cut and compression.
 constexpr PlacePreset kPresets[3] = {
-    {100.0f, false, -42.0f, 2.0f, -72.0f, 0.0f},
-    {120.0f, true,  -40.0f, 2.0f, -68.0f, 2.0f},
-    {200.0f, true,  -38.0f, 3.0f, -62.0f, 4.0f},
+    {100.0f, true,  -42.0f, 2.0f, -66.0f, 0.0f},
+    {120.0f, true,  -40.0f, 2.0f, -62.0f, 2.0f},
+    {200.0f, true,  -38.0f, 3.0f, -56.0f, 4.0f},
 };
 }  // namespace
 
@@ -41,6 +41,8 @@ void Processor::prepare(float sampleRate) {
     mFeatures.setup(sampleRate);
     mScene.reset();
     mAppliedPlace = -1;
+    mFrameAcc = 0.0f;
+    mFrameCount = 0;
     for (auto &l : mLimit) l.setup(sampleRate);
     mTone.setSampleRate(sampleRate);
     mLowCut.reset();
@@ -91,6 +93,16 @@ int Processor::voiceLearningState(float *out) {
     return s;
 }
 
+// The silence gate sits 6 dB above the measured background hiss (never below the
+// place's preset, never above -40 dBFS so normal speech always passes).
+void Processor::updateGateFloor() {
+    float nf = mScene.noiseFloorDb();
+    float floorDb = mPresetFloorDb;
+    if (nf > -119.0f) floorDb = std::clamp(nf + 6.0f, mPresetFloorDb, -40.0f);
+    mGateFloorDb = floorDb;
+    mWdrc.setFloor(floorDb);
+}
+
 void Processor::applySettings() {
     const bool autoPlace = mAuto.load();
     const int place = autoPlace ? mScene.place() : mPlace.load();
@@ -107,6 +119,8 @@ void Processor::applySettings() {
     const bool extra = mExtraLoud.load();
     mWdrc.setParams(kVolumeDb[mVolume.load()] + (extra ? kExtraLoudDb : 0.0f), p.kneeDb,
                     extra ? std::max(p.ratio, 3.0f) : p.ratio, p.floorDb);
+    mPresetFloorDb = p.floorDb;
+    updateGateFloor();
 
     for (int ear = 0; ear < 2; ++ear) {
         for (int b = 0; b < kBands; ++b) {
@@ -155,7 +169,8 @@ void Processor::process(const float *in, int inFrames, float *out, int outFrames
     int learn = mLearnState.load();
     if (learn == 1 && !mLearnStarted) { mSpeaker.beginLearning(); mLearnStarted = true; }
     const bool autoPlace = mAuto.load();
-    const bool needFeatures = autoPlace || learn == 1 || mSpeaker.hasProfile();
+    const bool needFeatures = learn == 1 || mSpeaker.hasProfile();
+    const int frameLen = static_cast<int>(mFs * 0.01f);
     const float loudDb = mOwnVoiceDb.load() - 3.0f;
 
     for (int i = 0; i < outFrames; ++i) {
@@ -167,7 +182,15 @@ void Processor::process(const float *in, int inFrames, float *out, int outFrames
         if (needFeatures && mFeatures.push(x)) {
             if (learn == 1) mSpeaker.learn(mFeatures);
             else mSpeaker.update(mFeatures, mOwnVoice.levelDb() > loudDb);
-            if (autoPlace) mScene.push(mFeatures.levelDb(), mNoise.speechProb());
+        }
+        // Every 10 ms: loudness for the background-noise measurement (silence gate
+        // and automatic place).
+        mFrameAcc += x * x;
+        if (++mFrameCount >= frameLen) {
+            float lvl = 10.0f * std::log10(mFrameAcc / mFrameCount + 1e-12f);
+            mScene.push(lvl, autoPlace ? mNoise.speechProb() : -1.0f);
+            mFrameAcc = 0.0f;
+            mFrameCount = 0;
         }
 
         // Detect own voice on the raw mic level. The gain is applied after the
@@ -232,6 +255,7 @@ void Processor::process(const float *in, int inFrames, float *out, int outFrames
         }
         mLearnStarted = false;
     }
+    if (mScene.noiseFloorDb() != mLastFloorSeen) { mLastFloorSeen = mScene.noiseFloorDb(); updateGateFloor(); }
     // The AI picked a different place: apply its preset from the next block.
     if (autoPlace && mScene.place() != mAppliedPlace) mDirty.store(true);
     mInLevelDb.store(inPeakDb);
