@@ -146,8 +146,12 @@ Example: `voice_mai_home.ogg`.
 - Measure the real delay and glitches with Google's free **OboeTester** app.
 - Check battery drain with Android Studio's Power Profiler.
 - Test the icons and voice help with older villagers **before** wide release.
-- Ask an audiologist to review the ear-test levels (`TestActivity`: −42 dBFS test tone,
-  +12 dB boost when not heard) and the volume steps (`Processor.cpp`).
+- Ask an audiologist to review the ear-test levels (`TestActivity`: tones from −60 to −10 dBFS
+  in 10 dB steps, boost = half the measured loss, max +30 dB) and the volume steps
+  (`Processor.cpp`: +12 to +44 dB, extra loud +10 dB).
+- Sunai sets the phone's media volume to maximum while it runs (and restores it after),
+  because it controls loudness and safety itself. Some phones show a "high volume"
+  warning the first time; the user must accept it, or the sound stays capped.
 
 ## Roadmap
 

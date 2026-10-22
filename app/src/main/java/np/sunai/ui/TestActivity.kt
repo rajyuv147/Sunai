@@ -13,16 +13,25 @@ import np.sunai.core.Sunai
 import np.sunai.core.VoiceHelp
 
 /**
- * Simple ear test: six tones per ear. A tone that is not heard gets a boost in
- * that ear's equaliser. This is a comfort setting, not a medical hearing test.
+ * Ear test that finds how loud each tone must be before it is heard.
+ *
+ * For each of six pitches the tone plays by itself, starting very soft. If the
+ * listener presses red ("didn't hear"), it plays again 10 dB louder, up to six
+ * steps. Green ("heard") records that level and moves to the next pitch.
+ * The boost for that pitch in that ear is about half the measured loss (the
+ * classic "half-gain rule" used in fitting hearing aids).
+ * This is a comfort setting, not a medical hearing test.
  */
 class TestActivity : BaseActivity() {
 
     override val voiceKey = VoiceHelp.Key.TEST
 
     private var ear = 0          // 0 left, 1 right
-    private var step = 0         // 0..5, 6 = done
+    private var step = 0         // which pitch, 0..5; 6 = done
+    private var levelIndex = 0   // which loudness step for this pitch
+    private var started = false
     private val stepDots = mutableListOf<View>()
+    private val levelBars = mutableListOf<View>()
     private val handler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,13 +49,21 @@ class TestActivity : BaseActivity() {
             dotsRow.addView(d, lp)
             stepDots += d
         }
+        val barsRow = findViewById<LinearLayout>(R.id.level_bars)
+        for (i in LEVELS.indices) {
+            val b = View(this)
+            val lp = LinearLayout.LayoutParams(Ui.dp(this, 14f), Ui.dp(this, 10f + i * 6f))
+            lp.marginStart = Ui.dp(this, 3f); lp.marginEnd = Ui.dp(this, 3f)
+            barsRow.addView(b, lp)
+            levelBars += b
+        }
 
         findViewById<View>(R.id.ear_left).setOnClickListener { pickEar(0) }
         findViewById<View>(R.id.ear_right).setOnClickListener { pickEar(1) }
         findViewById<View>(R.id.play_btn).setOnClickListener { playTone() }
         findViewById<View>(R.id.yes_btn).setOnClickListener { answer(heard = true) }
         findViewById<View>(R.id.no_btn).setOnClickListener { answer(heard = false) }
-        findViewById<View>(R.id.again_btn).setOnClickListener { step = 0; refresh() }
+        findViewById<View>(R.id.again_btn).setOnClickListener { restart() }
         findViewById<View>(R.id.forward_btn).setOnClickListener { goTo(MainActivity::class.java) }
 
         findViewById<View>(R.id.no_btn).background = Ui.round(this, Ui.color(this, R.color.red), 28f)
@@ -63,25 +80,43 @@ class TestActivity : BaseActivity() {
         if (!Sunai.beginTest()) {
             goTo(ConnectActivity::class.java)
             finish()
+            return
         }
+        started = true
+        // First tone plays by itself shortly after the screen opens.
+        scheduleTone(900)
     }
 
     override fun onPause() {
-        handler.removeCallbacks(tonePoll)
-        Sunai.endTest()
+        handler.removeCallbacksAndMessages(null)
+        if (started) Sunai.endTest()
+        started = false
         super.onPause()
     }
 
     private fun pickEar(e: Int) {
         ear = e
+        restart()
+    }
+
+    private fun restart() {
         step = 0
+        levelIndex = 0
         NativeAudio.stopTone()
         refresh()
+        scheduleTone(600)
     }
+
+    private fun scheduleTone(delayMs: Long) {
+        handler.removeCallbacks(autoPlay)
+        handler.postDelayed(autoPlay, delayMs)
+    }
+
+    private val autoPlay = Runnable { playTone() }
 
     private fun playTone() {
         if (step >= Sunai.BANDS) return
-        NativeAudio.playTone(Sunai.BAND_FREQS[step], ear, TEST_LEVEL_DB, TONE_MS)
+        NativeAudio.playTone(Sunai.BAND_FREQS[step], ear, LEVELS[levelIndex], TONE_MS)
         handler.removeCallbacks(tonePoll)
         handler.postDelayed(tonePoll, 50)
         stylePlay(true)
@@ -90,12 +125,24 @@ class TestActivity : BaseActivity() {
     private fun answer(heard: Boolean) {
         if (step >= Sunai.BANDS) return
         NativeAudio.stopTone()
-        // Not heard at the soft test level -> lift that band for this ear.
-        Sunai.saveBoost(ear, step, if (heard) 0f else BOOST_DB)
+        if (!heard && levelIndex < LEVELS.size - 1) {
+            // Not heard: try the same pitch louder.
+            levelIndex++
+            refresh()
+            scheduleTone(400)
+            return
+        }
+        // Heard (or not heard even at the loudest step): record and move on.
+        val heardAt = if (heard) LEVELS[levelIndex] else LEVELS.last() + 10f
+        val loss = heardAt - LEVELS[0]
+        Sunai.saveBoost(ear, step, (loss * 0.5f).coerceIn(0f, MAX_BOOST_DB))
         step++
+        levelIndex = 0
         if (step >= Sunai.BANDS) {
             Sunai.prefs.testDone = true
             Sunai.voice.say(VoiceHelp.Key.TEST_DONE)
+        } else {
+            scheduleTone(700)
         }
         refresh()
     }
@@ -123,6 +170,9 @@ class TestActivity : BaseActivity() {
             }
         }
         findViewById<View>(R.id.test_dots).contentDescription = "${minOf(step + 1, Sunai.BANDS)} / ${Sunai.BANDS}"
+        levelBars.forEachIndexed { i, b ->
+            b.background = Ui.round(this, Ui.color(this, if (i <= levelIndex) R.color.blue else R.color.track), 4f)
+        }
         stylePlay(NativeAudio.isTonePlaying())
     }
 
@@ -144,9 +194,9 @@ class TestActivity : BaseActivity() {
     }
 
     companion object {
-        /** Soft but clearly audible to normal hearing on typical earphones. */
-        private const val TEST_LEVEL_DB = -42f
+        /** Tone loudness steps in dBFS, from very soft to very loud (10 dB apart). */
+        private val LEVELS = floatArrayOf(-60f, -50f, -40f, -30f, -20f, -10f)
         private const val TONE_MS = 1200f
-        private const val BOOST_DB = 12f
+        private const val MAX_BOOST_DB = 30f
     }
 }

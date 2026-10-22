@@ -33,6 +33,9 @@ object NativeAudio {
     external fun getInputLevelDb(): Float
     external fun isOwnVoiceActive(): Boolean
 
+    /** +10 dB and a higher output ceiling, for severe hearing loss. */
+    external fun setExtraLoud(on: Boolean)
+
     // ---- AI: automatic place selection
     external fun setAutoPlace(on: Boolean)
     /** Place the AI chose: 0 home, 1 talk, 2 crowd. */
