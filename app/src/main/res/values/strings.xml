@@ -68,6 +68,8 @@
     <string name="lang_tha">थारू</string>
     <string name="not_medical">यो चिकित्सकीय उपकरण होइन। कान दुखे, पीप आए वा अचानक सुन्न छाडे स्वास्थ्य चौकी जानुहोस्।</string>
 
+    <string name="mic_blocked">माइकबाट आवाज आएन। फोनको सेटिङमा सुनाइलाई माइक अनुमति र माइक पहुँच खुला छ कि जाँच्नुहोस्।</string>
+
     <!-- Notification -->
     <string name="notif_channel">सुनाइ चलिरहेको</string>
     <string name="notif_text">माइकले सुनेर इयरफोनमा पठाउँदै छ। रेकर्ड हुँदैन।</string>

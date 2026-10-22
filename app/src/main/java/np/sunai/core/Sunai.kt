@@ -8,6 +8,8 @@ import android.os.BatteryManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.widget.Toast
+import np.sunai.R
 import np.sunai.audio.ListenService
 import np.sunai.audio.NativeAudio
 
@@ -63,6 +65,7 @@ object Sunai {
             return false
         }
         listening = true
+        micWarned = false
         ListenService.start(app)
         loudMinutes = 0
         main.removeCallbacks(loudCheck)
@@ -79,12 +82,20 @@ object Sunai {
     }
 
     /** Called by ListenService once it is in the foreground. */
-    internal fun openEngine(): Boolean = startEngine()
+    internal fun openEngine(): Boolean {
+        val ok = startEngine()
+        // A short soft beep in both ears: confirms that sound reaches the earphones.
+        if (ok) NativeAudio.playTone(880f, 2, -24f, 250f)
+        return ok
+    }
 
     /** Opens mic + earphone at the settings level that last worked on this phone. */
     private fun startEngine(level: Int = prefs.audioLevel): Boolean {
         val s = earphones.state
-        val ok = NativeAudio.start(s.outputId, s.micId, level)
+        // Output device 0 = let Android route to the active earphone, exactly like
+        // a music or video app. Forcing a device id can pick a Bluetooth headset's
+        // sleeping call channel (SCO) and play into nothing.
+        val ok = NativeAudio.start(0, s.micId, level)
         applyAll()
         if (testing) NativeAudio.setMuted(true)
         if (ok) {
@@ -98,6 +109,7 @@ object Sunai {
     // ---------------------------------------------------------------- mic watchdog
 
     private var stallChecks = 0
+    private var micWarned = false
 
     /**
      * Some phones accept the fastest microphone settings but then deliver no sound.
@@ -112,6 +124,10 @@ object Sunai {
                 if (next <= MAX_AUDIO_LEVEL) {
                     startEngine(next)
                     return
+                }
+                if (!micWarned) {
+                    micWarned = true
+                    Toast.makeText(app, R.string.mic_blocked, Toast.LENGTH_LONG).show()
                 }
             } else if (++stallChecks == 2) {
                 // Mic data is flowing: this level works on this phone.

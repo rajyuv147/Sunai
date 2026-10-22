@@ -117,6 +117,7 @@ bool AudioEngine::openLocked() {
     mUnderruns.store(0);
     mDropped.store(0);
     mMicPeak.store(0.0f);
+    mMicHeard.store(false);
 
     mSampleRate.store(rate);
     mProcessor.prepare(static_cast<float>(rate));
@@ -174,6 +175,7 @@ void AudioEngine::onInput(const float *data, int32_t frames, int32_t channels) {
         mRing[(w + i) & (kRingSize - 1)] = x;
         peak = std::max(peak, std::fabs(x));
     }
+    if (peak > 1e-6f) mMicHeard.store(true);
     mWrite.store(w + n, std::memory_order_release);
     if (n < frames) mDropped.fetch_add(frames - n);
     mInFrames.fetch_add(frames);
@@ -257,7 +259,10 @@ void AudioEngine::setError(const std::string &e) {
 bool AudioEngine::micStalled() const {
     if (!mRunning.load()) return false;
     int rate = mSampleRate.load();
-    return rate > 0 && mInFrames.load() == 0 && mOutFrames.load() > static_cast<uint64_t>(rate);
+    if (rate <= 0) return false;
+    uint64_t in = mInFrames.load();
+    if (in == 0) return mOutFrames.load() > static_cast<uint64_t>(rate);
+    return in > static_cast<uint64_t>(2 * rate) && !mMicHeard.load();
 }
 
 float AudioEngine::latencyMs() {
