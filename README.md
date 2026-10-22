@@ -21,7 +21,7 @@ the app cleans and balances the sound in real time, and sends it to the user's e
 
 ```
 phone mic → low-cut filter → AI noise reduction → compressor/expander (WDRC)
-          → howl guard → per-ear equaliser (from the ear test) → balance
+          → howl guard → own-voice reduction → per-ear equaliser (from the ear test) → balance
           → ear-safety limiter → earphone
 ```
 
@@ -31,6 +31,7 @@ phone mic → low-cut filter → AI noise reduction → compressor/expander (WDR
 | AI noise reduction | Removes background noise, keeps voices (Talk and Crowd modes) | 10 ms (off in Home, battery saver and low-delay mode) |
 | WDRC | Soft speech louder, loud sounds only a little louder; mic hiss pushed down in silence | 0 |
 | Howl guard | Detects squealing (feedback) and pulls the gain down | 0 |
+| Own-voice reduction | Turns the wearer's own voice down 18 dB (it is much louder at the phone mic than other people). Threshold learned on the Helper screen with **मेरो आवाज सिकाउनुहोस्** | 0 |
 | Equaliser | 6 bands per ear (250 Hz – 8 kHz), boosted where the ear test found weak hearing | 0 |
 | Limiter | Output can never exceed −6 dBFS (ear protection on) or −1 dBFS (off) | 0 |
 

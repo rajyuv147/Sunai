@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import np.sunai.R
 import np.sunai.audio.NativeAudio
 import np.sunai.core.Sunai
@@ -32,6 +33,8 @@ class HelperActivity : BaseActivity() {
     private lateinit var lowDelay: Row
     private lateinit var safety: Row
     private lateinit var saver: Row
+    private lateinit var ownVoice: Row
+    private var learning = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,6 +64,11 @@ class HelperActivity : BaseActivity() {
             R.string.helper_low_delay, R.string.helper_low_delay_sub) { Sunai.setLowDelay(!Sunai.prefs.lowDelay) }
         safety = row(R.id.row_safety, R.drawable.ic_shield, R.color.blue, R.color.blue_soft,
             R.string.helper_safety, R.string.helper_safety_sub) { Sunai.setSafety(!Sunai.prefs.safety) }
+        ownVoice = row(R.id.row_own_voice, R.drawable.ic_place_talk, R.color.blue, R.color.blue_soft,
+            R.string.helper_own_voice, R.string.helper_own_voice_sub) { Sunai.setOwnVoice(!Sunai.prefs.ownVoice) }
+        findViewById<View>(R.id.learn_voice).setOnClickListener { learnVoice() }
+        styleLearn()
+
         saver = row(R.id.row_saver, R.drawable.ic_battery, R.color.amber, R.color.amber_soft,
             R.string.helper_saver, R.string.helper_saver_sub) { Sunai.setSaverManual(!Sunai.prefs.saverManual) }
     }
@@ -130,6 +138,7 @@ class HelperActivity : BaseActivity() {
         Ui.setToggle(lowDelay.track, lowDelay.knob, Sunai.prefs.lowDelay)
         Ui.setToggle(safety.track, safety.knob, Sunai.prefs.safety)
         Ui.setToggle(saver.track, saver.knob, Sunai.saverOn)
+        Ui.setToggle(ownVoice.track, ownVoice.knob, Sunai.prefs.ownVoice)
 
         drawStatus()
     }
@@ -166,7 +175,72 @@ class HelperActivity : BaseActivity() {
         handler.post(statusTick)
     }
 
+    // ---------------------------------------------------------------- learn my voice
+
+    /**
+     * The wearer talks normally for 5 seconds with the phone where it is usually kept.
+     * Their loud speech level sets the own-voice threshold (10 dB below it), so other
+     * people's softer voices are not turned down.
+     */
+    private fun learnVoice() {
+        if (learning) return
+        if (!NativeAudio.isRunning()) {
+            Toast.makeText(this, R.string.helper_need_listening, Toast.LENGTH_LONG).show()
+            return
+        }
+        learning = true
+        styleLearn()
+        val samples = ArrayList<Float>()
+        val start = System.currentTimeMillis()
+        val text = findViewById<TextView>(R.id.learn_text)
+        val tick = object : Runnable {
+            override fun run() {
+                val elapsed = System.currentTimeMillis() - start
+                val level = NativeAudio.getInputLevelDb()
+                if (level > -90f) samples += level
+                if (elapsed < LEARN_MS) {
+                    val left = ((LEARN_MS - elapsed) / 1000 + 1).toInt()
+                    text.text = getString(R.string.helper_learn_listening, left)
+                    handler.postDelayed(this, 50)
+                } else {
+                    finishLearning(samples)
+                }
+            }
+        }
+        handler.post(tick)
+    }
+
+    private fun finishLearning(samples: List<Float>) {
+        learning = false
+        val sorted = samples.sorted()
+        val loud = if (sorted.size >= 20) sorted[(sorted.size * 0.9f).toInt().coerceAtMost(sorted.size - 1)] else -120f
+        if (loud < -50f) {
+            Toast.makeText(this, R.string.helper_learn_quiet, Toast.LENGTH_LONG).show()
+        } else {
+            val threshold = (loud - 10f).coerceIn(-38f, -12f)
+            Sunai.setOwnVoiceDb(threshold)
+            if (!Sunai.prefs.ownVoice) Sunai.setOwnVoice(true)
+            Toast.makeText(this, getString(R.string.helper_learn_done, threshold.toInt()), Toast.LENGTH_LONG).show()
+        }
+        styleLearn()
+    }
+
+    private fun styleLearn() {
+        val btn = findViewById<View>(R.id.learn_voice)
+        val fill = Ui.color(this, if (learning) R.color.blue else R.color.blue_soft)
+        val fg = Ui.color(this, if (learning) R.color.white else R.color.blue)
+        btn.background = Ui.round(this, fill, 18f)
+        Ui.tint(findViewById(R.id.learn_icon), fg)
+        findViewById<TextView>(R.id.learn_text).apply {
+            setTextColor(fg)
+            if (!learning) setText(R.string.helper_learn_voice)
+        }
+        findViewById<TextView>(R.id.learn_sub).setTextColor(
+            Ui.color(this, if (learning) R.color.white else R.color.muted))
+    }
+
     companion object {
+        private const val LEARN_MS = 5000L
         private const val UNLOCK_MS = 3000L
     }
 }

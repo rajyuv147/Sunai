@@ -171,6 +171,18 @@ object Sunai {
     fun setSafety(on: Boolean) { prefs.safety = on; NativeAudio.setSafety(on); notifyChanged() }
     fun setLowDelay(on: Boolean) { prefs.lowDelay = on; NativeAudio.setLowDelay(on); notifyChanged() }
     fun setSaverManual(on: Boolean) { prefs.saverManual = on; NativeAudio.setSaver(saverOn); notifyChanged() }
+    fun setOwnVoice(on: Boolean) {
+        prefs.ownVoice = on
+        NativeAudio.setOwnVoice(on, prefs.ownVoiceDb)
+        notifyChanged()
+    }
+
+    fun setOwnVoiceDb(db: Float) {
+        prefs.ownVoiceDb = db
+        NativeAudio.setOwnVoice(prefs.ownVoice, prefs.ownVoiceDb)
+        notifyChanged()
+    }
+
     fun setVoiceLang(lang: String) { prefs.voiceLang = lang; notifyChanged() }
 
     fun saveBoost(ear: Int, band: Int, db: Float) {
@@ -186,6 +198,7 @@ object Sunai {
         NativeAudio.setSafety(prefs.safety)
         NativeAudio.setLowDelay(prefs.lowDelay)
         NativeAudio.setSaver(saverOn)
+        NativeAudio.setOwnVoice(prefs.ownVoice, prefs.ownVoiceDb)
         for (ear in 0..1) for (b in 0 until BANDS) NativeAudio.setBoost(ear, b, prefs.boost(ear, b))
     }
 
