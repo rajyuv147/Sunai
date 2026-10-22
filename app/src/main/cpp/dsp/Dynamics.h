@@ -60,8 +60,8 @@ public:
         }
         mSilent = levelDb < mFloorDb;
         if (mSilent) {
-            // 2:1 downward expansion below the floor, capped at -18 dB.
-            g -= std::min(18.0f, (mFloorDb - levelDb));
+            // Gentle downward expansion below the floor (mic hiss), capped at -12 dB.
+            g -= std::min(12.0f, 0.5f * (mFloorDb - levelDb));
         }
         float target = dbToLin(g);
         mGain = mGainSmooth * mGain + (1.0f - mGainSmooth) * target;

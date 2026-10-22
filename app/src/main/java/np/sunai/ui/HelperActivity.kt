@@ -100,6 +100,7 @@ class HelperActivity : BaseActivity() {
     }
 
     override fun onPause() {
+        handler.removeCallbacks(statusTick)
         locked = true   // always locked again when the helper leaves
         super.onPause()
     }
@@ -130,18 +131,39 @@ class HelperActivity : BaseActivity() {
         Ui.setToggle(safety.track, safety.knob, Sunai.prefs.safety)
         Ui.setToggle(saver.track, saver.knob, Sunai.saverOn)
 
-        // Diagnostics for the helper, only while sound is running.
+        drawStatus()
+    }
+
+    /** Live engine numbers for the helper (and for bug reports: take a screenshot). */
+    private fun drawStatus() {
         val status = findViewById<TextView>(R.id.status_text)
+        val ear = Sunai.earphones.state
+        val sb = StringBuilder()
+        sb.append(getString(R.string.helper_status)).append(": ")
+        sb.append(if (Sunai.listening) "ON" else "OFF")
+        sb.append(" · ").append(ear.kind.name).append(" #").append(ear.outputId)
+        sb.append(" · mic #").append(ear.micId)
         if (NativeAudio.isRunning()) {
             val ms = NativeAudio.getLatencyMs()
-            val delay = if (ms > 0) "${ms.toInt()} ms" else "?"
-            val path = if (NativeAudio.isFastPath()) "⚡" else "⏳"
-            val ai = if (NativeAudio.isNoiseReductionActive()) "AI ✓" else "AI –"
-            status.text = "${getString(R.string.helper_status)}: $path $delay · ${NativeAudio.getSampleRate()} Hz · $ai"
-            status.visibility = View.VISIBLE
-        } else {
-            status.visibility = View.GONE
+            sb.append("\n").append(if (NativeAudio.isFastPath()) "⚡ " else "⏳ ")
+            sb.append(if (ms > 0) "${ms.toInt()} ms" else "? ms")
+            sb.append(" · AI ").append(if (NativeAudio.isNoiseReductionActive()) "✓" else "–")
         }
+        sb.append("\n").append(NativeAudio.getDiagnostics())
+        status.text = sb.toString()
+        status.visibility = View.VISIBLE
+    }
+
+    private val statusTick = object : Runnable {
+        override fun run() {
+            if (!locked) drawStatus()
+            handler.postDelayed(this, 700)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        handler.post(statusTick)
     }
 
     companion object {

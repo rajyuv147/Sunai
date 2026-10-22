@@ -16,7 +16,7 @@ class EarphoneMonitor(context: Context) {
 
     enum class Kind(val fast: Boolean) {
         WIRED(true), USB(true), HEARING_AID(true), LE_AUDIO(true),
-        BLUETOOTH_CLASSIC(false), NONE(false)
+        BLUETOOTH_CLASSIC(false), OTHER(false), NONE(false)
     }
 
     data class State(val kind: Kind, val outputId: Int, val micId: Int) {
@@ -64,13 +64,31 @@ class EarphoneMonitor(context: Context) {
 
     private fun kindOf(type: Int): Kind? = when {
         type == AudioDeviceInfo.TYPE_WIRED_HEADSET ||
-            type == AudioDeviceInfo.TYPE_WIRED_HEADPHONES -> Kind.WIRED
-        type == AudioDeviceInfo.TYPE_USB_HEADSET -> Kind.USB
+            type == AudioDeviceInfo.TYPE_WIRED_HEADPHONES ||
+            type == AudioDeviceInfo.TYPE_LINE_ANALOG ||
+            type == AudioDeviceInfo.TYPE_AUX_LINE -> Kind.WIRED
+        type == AudioDeviceInfo.TYPE_USB_HEADSET ||
+            type == AudioDeviceInfo.TYPE_USB_DEVICE ||      // USB-C earphones and dongles
+            type == AudioDeviceInfo.TYPE_USB_ACCESSORY ||
+            type == AudioDeviceInfo.TYPE_LINE_DIGITAL -> Kind.USB
         Build.VERSION.SDK_INT >= 28 && type == AudioDeviceInfo.TYPE_HEARING_AID -> Kind.HEARING_AID
         Build.VERSION.SDK_INT >= 31 && (type == AudioDeviceInfo.TYPE_BLE_HEADSET ||
             type == AudioDeviceInfo.TYPE_BLE_SPEAKER) -> Kind.LE_AUDIO
+        Build.VERSION.SDK_INT >= 33 && type == AudioDeviceInfo.TYPE_BLE_BROADCAST -> Kind.LE_AUDIO
         type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
             type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> Kind.BLUETOOTH_CLASSIC
-        else -> null   // phone speaker, earpiece etc. are never used for listening
+        type in NOT_EARPHONES -> null   // phone speaker, earpiece etc. are never used for listening
+        else -> Kind.OTHER              // unknown personal audio device: allow it, treat as slow
+    }
+
+    private companion object {
+        val NOT_EARPHONES = setOf(
+            AudioDeviceInfo.TYPE_BUILTIN_SPEAKER, AudioDeviceInfo.TYPE_BUILTIN_EARPIECE,
+            AudioDeviceInfo.TYPE_TELEPHONY, AudioDeviceInfo.TYPE_IP, AudioDeviceInfo.TYPE_BUS,
+            AudioDeviceInfo.TYPE_FM, AudioDeviceInfo.TYPE_HDMI, AudioDeviceInfo.TYPE_HDMI_ARC,
+            AudioDeviceInfo.TYPE_DOCK, AudioDeviceInfo.TYPE_UNKNOWN,
+            25 /* TYPE_REMOTE_SUBMIX */, 24 /* TYPE_BUILTIN_SPEAKER_SAFE */,
+            29 /* TYPE_HDMI_EARC */, 31 /* TYPE_DOCK_ANALOG */, 28 /* TYPE_ECHO_REFERENCE */,
+        )
     }
 }

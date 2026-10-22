@@ -16,8 +16,14 @@ AudioEngine &engine() {
 
 extern "C" {
 
-JNIEXPORT jboolean JNICALL FN(start)(JNIEnv *, jobject, jint outputDeviceId, jint inputDeviceId) {
-    return engine().startEngine(outputDeviceId, inputDeviceId) ? JNI_TRUE : JNI_FALSE;
+JNIEXPORT jboolean JNICALL FN(start)(JNIEnv *, jobject, jint outputDeviceId, jint inputDeviceId,
+                                     jint fallbackLevel) {
+    return engine().startEngine(outputDeviceId, inputDeviceId, fallbackLevel) ? JNI_TRUE : JNI_FALSE;
+}
+JNIEXPORT jboolean JNICALL FN(isMicStalled)(JNIEnv *, jobject) { return engine().micStalled(); }
+JNIEXPORT jint JNICALL FN(getFallbackLevel)(JNIEnv *, jobject) { return engine().fallbackLevel(); }
+JNIEXPORT jstring JNICALL FN(getDiagnostics)(JNIEnv *env, jobject) {
+    return env->NewStringUTF(engine().diagnostics().c_str());
 }
 JNIEXPORT void JNICALL FN(stop)(JNIEnv *, jobject) { engine().stopEngine(); }
 JNIEXPORT jboolean JNICALL FN(isRunning)(JNIEnv *, jobject) { return engine().running(); }

@@ -79,12 +79,49 @@ object Sunai {
     }
 
     /** Called by ListenService once it is in the foreground. */
-    internal fun openEngine(): Boolean {
+    internal fun openEngine(): Boolean = startEngine()
+
+    /** Opens mic + earphone at the settings level that last worked on this phone. */
+    private fun startEngine(level: Int = prefs.audioLevel): Boolean {
         val s = earphones.state
-        val ok = NativeAudio.start(s.outputId, s.micId)
+        val ok = NativeAudio.start(s.outputId, s.micId, level)
         applyAll()
+        if (testing) NativeAudio.setMuted(true)
+        if (ok) {
+            stallChecks = 0
+            main.removeCallbacks(micWatchdog)
+            main.postDelayed(micWatchdog, 1500)
+        }
         return ok
     }
+
+    // ---------------------------------------------------------------- mic watchdog
+
+    private var stallChecks = 0
+
+    /**
+     * Some phones accept the fastest microphone settings but then deliver no sound.
+     * If the mic stays silent, reopen with the next safer settings and remember
+     * the level that works so the next start is right first time.
+     */
+    private val micWatchdog = object : Runnable {
+        override fun run() {
+            if (!NativeAudio.isRunning()) return
+            if (NativeAudio.isMicStalled()) {
+                val next = NativeAudio.getFallbackLevel() + 1
+                if (next <= MAX_AUDIO_LEVEL) {
+                    startEngine(next)
+                    return
+                }
+            } else if (++stallChecks == 2) {
+                // Mic data is flowing: this level works on this phone.
+                prefs.audioLevel = NativeAudio.getFallbackLevel()
+            }
+            main.postDelayed(this, 1500)
+        }
+    }
+
+    private const val MAX_AUDIO_LEVEL = 3
 
     // ---------------------------------------------------------------- ear test
 
@@ -95,12 +132,7 @@ object Sunai {
         }
         testing = true
         NativeAudio.setMuted(true)            // only test tones, no microphone sound
-        if (!NativeAudio.isRunning()) {
-            val s = earphones.state
-            NativeAudio.start(s.outputId, s.micId)
-            applyAll()
-            NativeAudio.setMuted(true)
-        }
+        if (!NativeAudio.isRunning()) startEngine()
         return true
     }
 
@@ -147,11 +179,7 @@ object Sunai {
         if (s.connected) {
             voice.say(VoiceHelp.Key.CONNECTED)
             // Re-open on the new (possibly faster) earphone.
-            if (NativeAudio.isRunning()) {
-                NativeAudio.start(s.outputId, s.micId)
-                applyAll()
-                if (testing) NativeAudio.setMuted(true)
-            }
+            if (NativeAudio.isRunning()) startEngine()
         } else if (listening) {
             // Never play amplified sound through the loudspeaker: it would squeal.
             stopListening()

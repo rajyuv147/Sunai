@@ -6,8 +6,16 @@ object NativeAudio {
         System.loadLibrary("sunai")
     }
 
-    /** Device ids from AudioDeviceInfo.id; 0 lets Android choose. */
-    external fun start(outputDeviceId: Int, inputDeviceId: Int): Boolean
+    /**
+     * Device ids from AudioDeviceInfo.id; 0 lets Android choose.
+     * fallbackLevel 0 = fastest settings … 3 = safest settings (see AudioEngine.h).
+     */
+    external fun start(outputDeviceId: Int, inputDeviceId: Int, fallbackLevel: Int): Boolean
+    /** True when the earphone has played for over a second with no microphone data. */
+    external fun isMicStalled(): Boolean
+    external fun getFallbackLevel(): Int
+    /** One line of engine numbers for the helper screen. */
+    external fun getDiagnostics(): String
     external fun stop()
     external fun isRunning(): Boolean
 
