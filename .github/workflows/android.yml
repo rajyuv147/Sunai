@@ -19,9 +19,15 @@ jobs:
         run: bash scripts/fetch_rnnoise_model.sh || echo "::warning::RNNoise 0.2 model download failed; using 0.1.1"
       - name: Build and run the C++ sound engine tests
         run: |
+          set -o pipefail
           cmake -S native-tests -B native-tests/build -DCMAKE_BUILD_TYPE=Release
-          cmake --build native-tests/build -j
-          ./native-tests/build/sunai_tests
+          if ! cmake --build native-tests/build -j 2>&1 | tee build.log; then
+            grep -E "error|Error" build.log | head -30 | while IFS= read -r l; do echo "::error::${l//%/%25}"; done
+            exit 1
+          fi
+          ./native-tests/build/sunai_tests 2>&1 | tee test.log || {
+            grep -E "FAIL|model" test.log | while IFS= read -r l; do echo "::error::$l"; done; exit 1; }
+          grep -E "model|own voice|visitor|wearer|processed" test.log | while IFS= read -r l; do echo "::notice::$l"; done
 
   apk:
     name: Build APK
