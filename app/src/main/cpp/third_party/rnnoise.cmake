@@ -15,6 +15,9 @@ if(EXISTS ${RNN2}/src/rnnoise_data.c)
     add_library(rnnoise STATIC ${RNNOISE_SRC})
     target_include_directories(rnnoise PUBLIC ${RNN2}/include PRIVATE ${RNN2}/src)
     target_compile_definitions(rnnoise PUBLIC SUNAI_RNNOISE_V2=1)
+    # Leave out the full-precision debug copy of the weights (the phone uses the
+    # compact 8-bit copy), which keeps the app small.
+    target_compile_definitions(rnnoise PRIVATE DISABLE_DEBUG_FLOAT=1)
 else()
     message(STATUS "Sunai: using RNNoise 0.1.1 (run scripts/fetch_rnnoise_model.sh for the stronger model)")
     file(GLOB RNNOISE_SRC ${RNN1}/src/*.c)
