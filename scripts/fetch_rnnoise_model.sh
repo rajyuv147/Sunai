@@ -21,3 +21,7 @@ echo "sha256: $(sha256sum "$TMP/$FILE" | cut -d' ' -f1)"
 tar -xzf "$TMP/$FILE" -C "$TMP"
 cp "$TMP/src/rnnoise_data.c" "$TMP/src/rnnoise_data.h" "$DIR/src/"
 echo "RNNoise model installed ($(du -h "$DIR/src/rnnoise_data.c" | cut -f1) of source)."
+echo "guards: DISABLE_DEBUG_FLOAT=$(grep -c DISABLE_DEBUG_FLOAT "$DIR/src/rnnoise_data.c" || true)" \
+     "USE_WEIGHTS_FILE=$(grep -c USE_WEIGHTS_FILE "$DIR/src/rnnoise_data.c" || true)" \
+     "int8 arrays=$(grep -c 'opus_int8 ' "$DIR/src/rnnoise_data.c" || true)" \
+     "float arrays=$(grep -c 'static const float ' "$DIR/src/rnnoise_data.c" || true)"
