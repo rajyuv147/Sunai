@@ -287,8 +287,13 @@ std::string AudioEngine::diagnostics() {
     std::string err;
     { std::lock_guard<std::mutex> g(mErrLock); err = mLastError; }
     char buf[320];
-    std::snprintf(buf, sizeof(buf), "%s | %s | mic %llu (%.0f dB) out %llu | under %llu drop %llu | err %s",
-                  mRunning.load() ? "ON" : "OFF", mConfig.c_str(),
+#ifdef SUNAI_RNNOISE_V2
+    const char *model = "rnn0.2";
+#else
+    const char *model = "rnn0.1";
+#endif
+    std::snprintf(buf, sizeof(buf), "%s %s | %s | mic %llu (%.0f dB) out %llu | under %llu drop %llu | err %s",
+                  mRunning.load() ? "ON" : "OFF", model, mConfig.c_str(),
                   static_cast<unsigned long long>(mInFrames.load()), peakDb,
                   static_cast<unsigned long long>(mOutFrames.load()),
                   static_cast<unsigned long long>(mUnderruns.load()),

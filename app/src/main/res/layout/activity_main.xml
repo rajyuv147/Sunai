@@ -172,7 +172,7 @@
         </FrameLayout>
     </LinearLayout>
 
-    <!-- Place: home / talk / crowd -->
+    <!-- Place: auto (AI) / home / talk / crowd -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="96dp"
@@ -181,6 +181,14 @@
         android:layout_marginEnd="13dp"
         android:layout_marginBottom="14dp"
         android:orientation="horizontal">
+
+        <LinearLayout android:id="@+id/place_auto" style="@style/Sunai.Tile"
+            android:layout_height="match_parent" android:contentDescription="@string/place_auto">
+            <ImageView android:layout_width="40dp" android:layout_height="40dp"
+                android:importantForAccessibility="no" android:src="@drawable/ic_auto" />
+            <TextView style="@style/Sunai.Word" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:text="@string/place_auto" />
+        </LinearLayout>
 
         <LinearLayout android:id="@+id/place_home" style="@style/Sunai.Tile"
             android:layout_height="match_parent" android:contentDescription="@string/place_home">

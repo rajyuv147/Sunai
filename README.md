@@ -38,6 +38,16 @@ phone mic → low-cut filter → AI noise reduction → compressor/expander (WDR
 Every stage works sample by sample, so the only buffering is Android's own (two audio
 bursts, usually 4–10 ms) plus the optional 10 ms of AI.
 
+### The AI in Sunai
+
+| Feature | How it works | Cost |
+|---|---|---|
+| **Noise removal** | RNNoise neural network (0.2 model when the build downloads it, otherwise 0.1.1). Removes fans, traffic, crowd noise; keeps voices | 10 ms delay, on in Talk/Crowd only |
+| **Automatic place** (स्वतः tile) | Every 3 s looks at the background noise floor and the network's speech detector, picks Home / Talk / Crowd; switches only after two windows agree (about 6–9 s) | Runs the network for analysis only, no added delay; off in battery saver |
+| **Recognising the wearer's voice** | "Learn my voice" builds a small model of the wearer's pitch and voice colour (8-band spectral shape). A second model learns other people from quieter voices. A loud voice is turned down only if it matches the wearer, so a loud visitor still comes through | About 0.1 ms per 10 ms on a phone; pitch analysis off in battery saver (falls back to loudness only) |
+
+Everything runs on the phone; nothing is uploaded.
+
 ### Delay you can expect
 
 | Earphone | Total delay |

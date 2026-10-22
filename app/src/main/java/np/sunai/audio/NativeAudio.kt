@@ -33,6 +33,23 @@ object NativeAudio {
     external fun getInputLevelDb(): Float
     external fun isOwnVoiceActive(): Boolean
 
+    // ---- AI: automatic place selection
+    external fun setAutoPlace(on: Boolean)
+    /** Place the AI chose: 0 home, 1 talk, 2 crowd. */
+    external fun getAutoPlace(): Int
+    external fun getNoiseFloorDb(): Float
+
+    // ---- AI: wearer's voice model (18 floats: 9 means then 9 variances)
+    external fun setVoiceProfile(profile: FloatArray?)
+    external fun startVoiceLearning()
+    external fun stopVoiceLearning()
+    /** 0 idle, 1 learning, 2 finishing, 3 learned, 4 not enough clear voice */
+    external fun getVoiceLearningState(): Int
+    external fun getLearnedVoiceProfile(): FloatArray?
+    external fun hasVoiceProfile(): Boolean
+    /** Above 0: sounds like the wearer. Below 0: someone else. */
+    external fun getSpeakerScore(): Float
+
     external fun playTone(freqHz: Float, ear: Int, levelDb: Float, durationMs: Float)
     external fun stopTone()
     external fun isTonePlaying(): Boolean

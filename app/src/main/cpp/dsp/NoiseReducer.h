@@ -27,7 +27,12 @@ public:
     bool usable() const { return mUsable && mState != nullptr; }
 
     void setEnabled(bool on) { mTarget = (on && usable()) ? 1.0f : 0.0f; }
-    bool active() const { return mMix > 0.0f || mTarget > 0.0f; }
+    // Analyse only: run the network for its speech detection, but play the
+    // original sound (no delay). Used by automatic place selection.
+    void setAnalyse(bool on) { mAnalyse = on && usable(); }
+    bool active() const { return mMix > 0.0f || mTarget > 0.0f || mAnalyse; }
+    // Neural speech probability (0..1) of the last 10 ms frame, or -1 if not running.
+    float speechProb() const { return active() ? mVad : -1.0f; }
     int latencyFrames() const { return mTarget > 0.0f ? kFrame : 0; }
 
     inline float process(float x) {
@@ -36,13 +41,13 @@ public:
         float wet = mOut[mPos] * (1.0f / 32768.0f);
         if (++mPos == kFrame) {
             mPos = 0;
-            rnnoise_process_frame(mState, mOut, mIn);
+            mVad = rnnoise_process_frame(mState, mOut, mIn);
         }
         // Ramp the mix toward the target over one frame.
         const float step = 1.0f / kFrame;
         if (mMix < mTarget) mMix = std::min(mTarget, mMix + step);
         else if (mMix > mTarget) mMix = std::max(mTarget, mMix - step);
-        if (mMix == 0.0f && mTarget == 0.0f) {
+        if (mMix == 0.0f && mTarget == 0.0f && !mAnalyse) {
             // Fully off again: clear buffers so the next switch-on starts clean.
             std::memset(mIn, 0, sizeof(mIn));
             std::memset(mOut, 0, sizeof(mOut));
@@ -57,7 +62,8 @@ private:
     float mIn[kFrame] = {};
     float mOut[kFrame] = {};
     int mPos = 0;
-    float mMix = 0.0f, mTarget = 0.0f;
+    float mMix = 0.0f, mTarget = 0.0f, mVad = 0.0f;
+    bool mAnalyse = false;
 };
 
 }  // namespace sunai

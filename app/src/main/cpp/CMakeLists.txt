@@ -10,10 +10,8 @@ set(BUILD_SHARED_LIBS OFF)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/oboe ${CMAKE_CURRENT_BINARY_DIR}/oboe)
 target_compile_options(oboe PRIVATE ${SPEED_FLAGS})
 
-# RNNoise (AI noise reduction), also static.
-file(GLOB RNNOISE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/rnnoise/src/*.c)
-add_library(rnnoise STATIC ${RNNOISE_SRC})
-target_include_directories(rnnoise PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/rnnoise/include)
+# RNNoise (AI noise reduction), also static. Picks the 0.2 model when downloaded.
+include(${CMAKE_CURRENT_SOURCE_DIR}/third_party/rnnoise.cmake)
 target_compile_options(rnnoise PRIVATE ${SPEED_FLAGS} -w)
 
 # The app's own native library: one small .so per processor type.

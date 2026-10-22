@@ -1,0 +1,1 @@
+RNNoise v0.2 (904a876) from https://github.com/xiph/rnnoise — BSD-3-Clause. The model (src/rnnoise_data.c/.h) is downloaded at build time by scripts/fetch_rnnoise_model.sh.

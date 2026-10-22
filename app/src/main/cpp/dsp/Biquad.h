@@ -16,6 +16,14 @@ public:
             -2.0f * cosw / a0, (1.0f - alpha) / a0);
     }
 
+    // Band-pass (constant 0 dB peak gain) around `freq`.
+    void setBandPass(float fs, float freq, float q) {
+        float w0 = 2.0f * kPi * freq / fs;
+        float cosw = std::cos(w0), alpha = std::sin(w0) / (2.0f * q);
+        float a0 = 1.0f + alpha;
+        set(alpha / a0, 0.0f, -alpha / a0, -2.0f * cosw / a0, (1.0f - alpha) / a0);
+    }
+
     // Bell-shaped boost or cut around `freq`.
     void setPeaking(float fs, float freq, float gainDb, float q = 1.0f) {
         if (std::fabs(gainDb) < 0.01f) { setBypass(); return; }

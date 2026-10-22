@@ -55,8 +55,66 @@ static float rms(const std::vector<float> &v, int ch, int from = 0) {
     return n ? static_cast<float>(std::sqrt(acc / n)) : 0.0f;
 }
 
+// A synthetic voiced sound: harmonics of f0 shaped by two "formant" peaks,
+// with slight vibrato and a syllable-like loudness pattern.
+struct Voice {
+    float f0, form1, form2;
+    double phase = 0.0;
+    float next(int n) {
+        float t = n / kFs;
+        float f = f0 * (1.0f + 0.02f * std::sin(2.0f * kPi * 5.0f * t));
+        phase += f / kFs;
+        float s = 0.0f;
+        for (int k = 1; k * f0 < 5000.0f; ++k) {
+            float fk = k * f0;
+            float a = std::exp(-std::pow(std::log(fk / form1) / 0.35f, 2.0f)) +
+                      0.6f * std::exp(-std::pow(std::log(fk / form2) / 0.35f, 2.0f)) + 0.03f;
+            s += a * std::sin(2.0f * kPi * k * static_cast<float>(phase));
+        }
+        float syll = 0.65f + 0.35f * std::sin(2.0f * kPi * 4.0f * t);
+        return s * syll;
+    }
+};
+
+// Runs `seconds` of a voice at about `db` dBFS RMS; returns stereo output.
+static std::vector<float> runVoice(Processor &p, Voice &v, float db, float seconds, int &clock) {
+    // Calibrate the voice's raw RMS once.
+    Voice probe = v;
+    double acc = 0; int cal = 4800;
+    for (int i = 0; i < cal; ++i) { float s = probe.next(i); acc += s * s; }
+    float scale = std::pow(10.0f, db / 20.0f) / static_cast<float>(std::sqrt(acc / cal));
+    int total = static_cast<int>(seconds * kFs);
+    std::vector<float> in(kBlock), out(2 * kBlock), all;
+    for (int n = 0; n < total; n += kBlock) {
+        for (int i = 0; i < kBlock; ++i) in[i] = scale * v.next(clock++);
+        p.process(in.data(), kBlock, out.data(), kBlock);
+        all.insert(all.end(), out.begin(), out.end());
+    }
+    return all;
+}
+
+// White noise at about `db` dBFS RMS.
+static void runNoise(Processor &p, float db, float seconds) {
+    float amp = std::pow(10.0f, db / 20.0f) * 1.732f;
+    uint32_t seed = 12345;
+    int total = static_cast<int>(seconds * kFs);
+    std::vector<float> in(kBlock), out(2 * kBlock);
+    for (int n = 0; n < total; n += kBlock) {
+        for (int i = 0; i < kBlock; ++i) {
+            seed = seed * 1664525u + 1013904223u;
+            in[i] = amp * ((seed >> 8) / 8388608.0f - 1.0f);
+        }
+        p.process(in.data(), kBlock, out.data(), kBlock);
+    }
+}
+
 int main() {
     std::printf("Sunai sound engine tests\n");
+#ifdef SUNAI_RNNOISE_V2
+    std::printf("AI noise model: RNNoise 0.2\n");
+#else
+    std::printf("AI noise model: RNNoise 0.1.1\n");
+#endif
 
     {
         std::printf("Silence stays quiet\n");
@@ -160,6 +218,69 @@ int main() {
         float softOff = rms(runSine(off, 300.0f, -45.0f, 1.0f), 0, 24000);
         CHECK(softOn > softOff * 0.9f, "other people's softer speech is not turned down");
         CHECK(on.inputLevelDb() > -50.0f && on.inputLevelDb() < -40.0f, "input level reported for calibration");
+    }
+
+    {
+        std::printf("Learning the wearer's voice\n");
+        Processor p; p.prepare(kFs); p.setPlace(0); p.setVolume(2); p.setSafety(false);
+        p.setOwnVoice(true, -26.0f);
+        Voice wearer{120.0f, 500.0f, 1500.0f};
+        Voice visitor{230.0f, 900.0f, 2600.0f};
+        int clock = 0;
+        p.startVoiceLearning();
+        runVoice(p, wearer, -18.0f, 5.0f, clock);
+        p.stopVoiceLearning();
+        runVoice(p, wearer, -60.0f, 0.02f, clock);
+        float profile[Processor::kProfile];
+        int state = p.voiceLearningState(profile);
+        std::printf("        learned pitch %.0f Hz\n", std::pow(2.0f, profile[0]));
+        CHECK(state == 3, "voice learned from 5 s of speech");
+        CHECK(std::fabs(std::pow(2.0f, profile[0]) - 120.0f) < 12.0f, "wearer's pitch measured correctly");
+        CHECK(p.hasVoiceProfile(), "profile active after learning");
+
+        // Too little voice: only noise during learning.
+        Processor q; q.prepare(kFs); q.startVoiceLearning(); runNoise(q, -70.0f, 3.0f);
+        q.stopVoiceLearning(); runNoise(q, -70.0f, 0.02f);
+        CHECK(q.voiceLearningState(nullptr) == 4, "learning fails cleanly without voice");
+
+        std::printf("Recognising the wearer vs a loud visitor\n");
+        Processor off; off.prepare(kFs); off.setPlace(0); off.setVolume(2); off.setSafety(false);
+        off.setOwnVoice(false, -26.0f);
+        int c2 = 0, c3 = 0;
+        // Others talking quietly first, so the "other people" model learns them.
+        runVoice(p, visitor, -45.0f, 2.0f, clock);
+        // Wearer speaks loudly: turned down.
+        auto own = runVoice(p, wearer, -14.0f, 1.0f, clock);
+        auto ownRef = runVoice(off, wearer, -14.0f, 1.0f, c2);
+        float ownDrop = linToDb(rms(ownRef, 0, 24000)) - linToDb(rms(own, 0, 24000));
+        std::printf("        wearer turned down %.1f dB (score %.1f)\n", ownDrop, p.speakerScore());
+        CHECK(ownDrop > 12.0f, "wearer's loud voice is turned down");
+        // Silence, then a visitor speaks just as loudly: let through.
+        runVoice(p, wearer, -80.0f, 0.5f, clock);
+        auto vis = runVoice(p, visitor, -14.0f, 1.0f, clock);
+        auto visRef = runVoice(off, visitor, -14.0f, 1.0f, c3);
+        float visDrop = linToDb(rms(visRef, 0, 24000)) - linToDb(rms(vis, 0, 24000));
+        std::printf("        loud visitor turned down only %.1f dB (score %.1f)\n", visDrop, p.speakerScore());
+        CHECK(visDrop < 3.0f, "loud visitor is NOT turned down");
+        CHECK(allFinite(own) && allFinite(vis), "no NaN with voice model");
+    }
+
+    {
+        std::printf("Automatic place selection\n");
+        Processor p; p.prepare(kFs); p.setAutoPlace(true);
+        runNoise(p, -75.0f, 10.0f);
+        std::printf("        quiet room: floor %.0f dB -> place %d\n", p.noiseFloorDb(), p.autoPlace());
+        CHECK(p.autoPlace() == 0, "quiet room -> Home");
+        runNoise(p, -50.0f, 10.0f);
+        std::printf("        some noise: floor %.0f dB -> place %d\n", p.noiseFloorDb(), p.autoPlace());
+        CHECK(p.autoPlace() == 1, "some background noise -> Talk");
+        runNoise(p, -32.0f, 10.0f);
+        std::printf("        loud noise: floor %.0f dB -> place %d\n", p.noiseFloorDb(), p.autoPlace());
+        CHECK(p.autoPlace() == 2, "loud background -> Crowd");
+        CHECK(p.extraLatencyFrames() == 480, "Crowd preset applied (AI noise removal on)");
+        runNoise(p, -32.0f, 2.5f);
+        runNoise(p, -75.0f, 3.1f);
+        CHECK(p.autoPlace() == 2, "one quiet moment does not flip the place");
     }
 
     {

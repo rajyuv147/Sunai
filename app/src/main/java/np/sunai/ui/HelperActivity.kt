@@ -158,6 +158,18 @@ class HelperActivity : BaseActivity() {
             sb.append(if (ms > 0) "${ms.toInt()} ms" else "? ms")
             sb.append(" · AI ").append(if (NativeAudio.isNoiseReductionActive()) "✓" else "–")
         }
+        if (NativeAudio.isRunning()) {
+            val places = arrayOf("घर", "कुरा", "भीड")
+            sb.append("\nAI: ")
+            sb.append(if (Sunai.prefs.autoPlace) "स्वतः→" else "").append(places[Sunai.currentPlace])
+            sb.append(" (floor ${NativeAudio.getNoiseFloorDb().toInt()} dB)")
+            if (NativeAudio.hasVoiceProfile()) {
+                val score = NativeAudio.getSpeakerScore()
+                sb.append(" · voice ✓ ").append(if (score > 0) "me" else if (score < -2) "other" else "?")
+            } else {
+                sb.append(" · voice –")
+            }
+        }
         sb.append("\n").append(NativeAudio.getDiagnostics())
         status.text = sb.toString()
         status.visibility = View.VISIBLE
@@ -179,8 +191,9 @@ class HelperActivity : BaseActivity() {
 
     /**
      * The wearer talks normally for 5 seconds with the phone where it is usually kept.
-     * Their loud speech level sets the own-voice threshold (10 dB below it), so other
-     * people's softer voices are not turned down.
+     * Two things are learned:
+     *  - their loud speech level -> own-voice threshold (10 dB below it)
+     *  - their voice model (pitch + voice colour), so a loud visitor is not turned down
      */
     private fun learnVoice() {
         if (learning) return
@@ -190,6 +203,7 @@ class HelperActivity : BaseActivity() {
         }
         learning = true
         styleLearn()
+        NativeAudio.startVoiceLearning()
         val samples = ArrayList<Float>()
         val start = System.currentTimeMillis()
         val text = findViewById<TextView>(R.id.learn_text)
@@ -211,6 +225,20 @@ class HelperActivity : BaseActivity() {
     }
 
     private fun finishLearning(samples: List<Float>) {
+        NativeAudio.stopVoiceLearning()
+        // The sound engine finishes the voice model on its next audio block.
+        var tries = 0
+        val waitModel = object : Runnable {
+            override fun run() {
+                val state = NativeAudio.getVoiceLearningState()
+                if (state == 2 && ++tries < 20) { handler.postDelayed(this, 25); return }
+                applyLearning(samples, if (state == 3) NativeAudio.getLearnedVoiceProfile() else null)
+            }
+        }
+        handler.post(waitModel)
+    }
+
+    private fun applyLearning(samples: List<Float>, profile: FloatArray?) {
         learning = false
         val sorted = samples.sorted()
         val loud = if (sorted.size >= 20) sorted[(sorted.size * 0.9f).toInt().coerceAtMost(sorted.size - 1)] else -120f
@@ -220,9 +248,13 @@ class HelperActivity : BaseActivity() {
             val threshold = (loud - 10f).coerceIn(-38f, -12f)
             Sunai.setOwnVoiceDb(threshold)
             if (!Sunai.prefs.ownVoice) Sunai.setOwnVoice(true)
-            Toast.makeText(this, getString(R.string.helper_learn_done, threshold.toInt()), Toast.LENGTH_LONG).show()
+            if (profile != null) Sunai.saveVoiceProfile(profile)
+            val msg = if (profile != null) getString(R.string.helper_learn_done_voice, threshold.toInt())
+                      else getString(R.string.helper_learn_done, threshold.toInt())
+            Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
         }
         styleLearn()
+        refresh()
     }
 
     private fun styleLearn() {

@@ -133,10 +133,13 @@ public:
         mDuck = dbToLin(duckDb);
     }
     // Feed the raw microphone signal; returns the gain to apply to the output.
-    inline float detect(float x) {
+    // otherSpeaker = the voice model says this loud voice is NOT the wearer.
+    inline float detect(float x, bool otherSpeaker = false) {
         float levelDb = linToDb(mEnv.process(x));
         float target = 1.0f;
-        if (mEnabled) {
+        if (mEnabled && otherSpeaker) {
+            mHold = 0;   // a loud visitor: let them through
+        } else if (mEnabled) {
             if (levelDb > mThresholdDb) { mHold = mHoldSamples; target = mDuck; }
             else if (mHold > 0) { --mHold; target = mDuck; }
         }
