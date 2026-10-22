@@ -15,6 +15,7 @@
     <string name="place_home">घर</string>
     <string name="place_talk">कुरा</string>
     <string name="place_crowd">भीड</string>
+    <string name="place_auto">स्वतः</string>
     <string name="voice_btn">सुन्नुस्</string>
     <string name="voice_btn_speaking">बोल्दै…</string>
     <string name="saver_badge">ब्याट्री बचत</string>
@@ -67,7 +68,8 @@
     <string name="helper_learn_voice">मेरो आवाज सिकाउनुहोस्</string>
     <string name="helper_learn_hint">थिचेर ५ सेकेन्ड सामान्य रूपमा बोल्नुहोस्</string>
     <string name="helper_learn_listening">बोल्नुहोस्… %d</string>
-    <string name="helper_learn_done">आवाज सिकियो (%d dB)</string>
+    <string name="helper_learn_done">आवाजको तह सिकियो (%d dB)। आवाज चिन्न अझ स्पष्ट बोलेर फेरि गर्नुहोस्।</string>
+    <string name="helper_learn_done_voice">तपाईंको आवाज चिनियो (%d dB)। अब अरूको ठूलो आवाज घटाइँदैन।</string>
     <string name="helper_learn_quiet">आवाज सुनिएन। फोन नजिक राखेर फेरि बोल्नुहोस्।</string>
     <string name="helper_need_listening">पहिले गृहमा ठूलो कान बटन थिचेर सुनाइ खोल्नुहोस्।</string>
     <string name="lang_ne">नेपाली</string>

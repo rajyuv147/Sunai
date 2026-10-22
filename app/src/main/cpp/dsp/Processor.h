@@ -14,7 +14,9 @@
 #include "Biquad.h"
 #include "Dynamics.h"
 #include "NoiseReducer.h"
+#include "SceneClassifier.h"
 #include "ToneGenerator.h"
+#include "VoiceFeatures.h"
 
 namespace sunai {
 
@@ -37,6 +39,15 @@ public:
     void setLowDelay(bool on);                 // skip the 10 ms AI stage
     void setMuted(bool on);                    // mic path silent (e.g. during the ear test)
     void setOwnVoice(bool on, float thresholdDb); // turn down the wearer's own (loud) voice
+    void setAutoPlace(bool on);                // AI picks Home / Talk / Crowd
+
+    // Wearer voice profile: kProfile floats (means then variances).
+    static constexpr int kProfile = 2 * VoiceModel::kDims;
+    void setVoiceProfile(const float *profile);   // nullptr clears it
+    void startVoiceLearning();
+    void stopVoiceLearning();
+    // 0 idle, 1 learning, 2 finishing, 3 learned (profile in `out`), 4 too little voice
+    int voiceLearningState(float *out);
 
     ToneGenerator &tones() { return mTone; }
 
@@ -47,6 +58,10 @@ public:
     int extraLatencyFrames() const { return mNrLatency.load(); }
     float inputLevelDb() const { return mInLevelDb.load(); }  // loudest mic level in the last block
     bool ownVoiceActive() const { return mOwnActive.load(); }
+    int autoPlace() const { return mScene.place(); }           // place the AI chose
+    float noiseFloorDb() const { return mScene.noiseFloorDb(); }
+    bool hasVoiceProfile() const { return mHasProfile.load(); }
+    float speakerScore() const { return mSpeakerScore.load(); } // >0 wearer, <0 someone else
 
     // ---- Audio thread ----
     // `in` holds `inFrames` mono samples (may be fewer than outFrames if the
@@ -65,7 +80,12 @@ private:
     std::atomic<float> mBoost[2][kBands] = {};
     std::atomic<bool> mOwnVoiceOn{true};
     std::atomic<float> mOwnVoiceDb{-26.0f};
+    std::atomic<bool> mAuto{false};
     std::atomic<bool> mDirty{true};
+    float mPendingProfile[kProfile] = {};
+    std::atomic<int> mProfileCmd{0};      // 0 none, 1 set, 2 clear
+    std::atomic<int> mLearnState{0};
+    float mLearned[kProfile] = {};
 
     // Status
     std::atomic<float> mLevel{0.0f};
@@ -73,6 +93,8 @@ private:
     std::atomic<int> mNrLatency{0};
     std::atomic<float> mInLevelDb{-120.0f};
     std::atomic<bool> mOwnActive{false};
+    std::atomic<bool> mHasProfile{false};
+    std::atomic<float> mSpeakerScore{0.0f};
 
     // DSP blocks (audio thread only)
     Biquad mLowCut;
@@ -80,6 +102,11 @@ private:
     Wdrc mWdrc;
     HowlGuard mHowlGuard;
     OwnVoiceGate mOwnVoice;
+    VoiceFeatures mFeatures;
+    SpeakerCheck mSpeaker;
+    SceneClassifier mScene;
+    int mAppliedPlace = -1;
+    bool mLearnStarted = false;
     Biquad mEq[2][kBands];
     Limiter mLimit[2];
     ToneGenerator mTone;

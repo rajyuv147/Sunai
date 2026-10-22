@@ -34,6 +34,9 @@ class MainActivity : BaseActivity() {
                findViewById<LinearLayout>(R.id.place_crowd))
     }
 
+    private val autoTile by lazy { findViewById<LinearLayout>(R.id.place_auto) }
+    private var shownPlace = -1
+
     private val handler = Handler(Looper.getMainLooper())
     private var resumed = false
 
@@ -55,7 +58,8 @@ class MainActivity : BaseActivity() {
         bigButton.setOnClickListener { toggleListening() }
         findViewById<View>(R.id.vol_down).setOnClickListener { Sunai.setVolume(Sunai.prefs.volume - 1) }
         findViewById<View>(R.id.vol_up).setOnClickListener { Sunai.setVolume(Sunai.prefs.volume + 1) }
-        places.forEachIndexed { i, tile -> tile.setOnClickListener { Sunai.setPlace(i) } }
+        places.forEachIndexed { i, tile -> tile.setOnClickListener { Sunai.pickPlace(i) } }
+        autoTile.setOnClickListener { Sunai.setAutoPlace(true) }
         findViewById<View>(R.id.earphone_pill).setOnClickListener { goTo(ConnectActivity::class.java) }
 
         // Static backgrounds
@@ -124,15 +128,7 @@ class MainActivity : BaseActivity() {
         }
         volBars.contentDescription = "$vol / 5"
 
-        // Places
-        places.forEachIndexed { i, tile ->
-            val sel = i == Sunai.prefs.place
-            tile.background = Ui.round(this, Ui.color(this, if (sel) R.color.blue else R.color.white), 22f)
-            val fg = Ui.color(this, if (sel) R.color.white else R.color.ink)
-            Ui.tint(tile.getChildAt(0) as ImageView, fg)
-            (tile.getChildAt(1) as TextView).setTextColor(fg)
-            tile.isSelected = sel
-        }
+        drawPlaces()
 
         // Earphone pill: green check when connected, ⚡ fast or ⏳ slow.
         val ear = Sunai.earphones.state
@@ -156,6 +152,37 @@ class MainActivity : BaseActivity() {
 
         findViewById<View>(R.id.saver_badge).visibility = if (Sunai.saverOn) View.VISIBLE else View.GONE
         drawMeter(if (on) NativeAudio.getLevel() else 0f)
+    }
+
+    /**
+     * Auto selected: the auto tile is solid blue and the place the AI chose is light blue.
+     * Manual: the chosen place is solid blue.
+     */
+    private fun drawPlaces() {
+        val auto = Sunai.prefs.autoPlace
+        val current = Sunai.currentPlace
+        shownPlace = current
+        styleTile(autoTile, if (auto) 2 else 0)
+        places.forEachIndexed { i, tile ->
+            styleTile(tile, when {
+                !auto && i == current -> 2
+                auto && i == current && Sunai.listening -> 1
+                else -> 0
+            })
+        }
+    }
+
+    /** level 0 = plain, 1 = light highlight (AI's choice), 2 = selected */
+    private fun styleTile(tile: LinearLayout, level: Int) {
+        val (bg, fg) = when (level) {
+            2 -> R.color.blue to R.color.white
+            1 -> R.color.blue_soft to R.color.blue
+            else -> R.color.white to R.color.ink
+        }
+        tile.background = Ui.round(this, Ui.color(this, bg), 22f)
+        Ui.tint(tile.getChildAt(0) as ImageView, Ui.color(this, fg))
+        (tile.getChildAt(1) as TextView).setTextColor(Ui.color(this, fg))
+        tile.isSelected = level == 2
     }
 
     private fun buildMeter() {
@@ -200,7 +227,11 @@ class MainActivity : BaseActivity() {
     private val meterTick = object : Runnable {
         override fun run() {
             if (!resumed) return
-            if (Sunai.listening) drawMeter(NativeAudio.getLevel())
+            if (Sunai.listening) {
+                drawMeter(NativeAudio.getLevel())
+                // The AI may have switched place: update the highlight.
+                if (Sunai.prefs.autoPlace && Sunai.currentPlace != shownPlace) drawPlaces()
+            }
             handler.postDelayed(this, 80)
         }
     }

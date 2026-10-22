@@ -36,6 +36,9 @@ void Processor::prepare(float sampleRate) {
     mHowlGuard.setup(sampleRate);
     mOwnVoice.setup(sampleRate);
     mOwnVoice.reset();
+    mFeatures.setup(sampleRate);
+    mScene.reset();
+    mAppliedPlace = -1;
     for (auto &l : mLimit) l.setup(sampleRate);
     mTone.setSampleRate(sampleRate);
     mLowCut.reset();
@@ -64,12 +67,40 @@ void Processor::setOwnVoice(bool on, float thresholdDb) {
     mDirty.store(true);
 }
 
+void Processor::setAutoPlace(bool on) { mAuto.store(on); mDirty.store(true); }
+
+void Processor::setVoiceProfile(const float *profile) {
+    if (profile) {
+        std::copy(profile, profile + kProfile, mPendingProfile);
+        mProfileCmd.store(1);
+    } else {
+        mProfileCmd.store(2);
+    }
+}
+void Processor::startVoiceLearning() { mLearnState.store(1); }
+void Processor::stopVoiceLearning() {
+    int expected = 1;
+    mLearnState.compare_exchange_strong(expected, 2);
+}
+int Processor::voiceLearningState(float *out) {
+    int s = mLearnState.load();
+    if (s == 3 && out) std::copy(mLearned, mLearned + kProfile, out);
+    return s;
+}
+
 void Processor::applySettings() {
-    const PlacePreset &p = kPresets[mPlace.load()];
+    const bool autoPlace = mAuto.load();
+    const int place = autoPlace ? mScene.place() : mPlace.load();
+    mAppliedPlace = place;
+    const PlacePreset &p = kPresets[place];
     const bool saver = mSaver.load();
 
     mLowCut.setHighPass(mFs, p.lowCutHz);
     mNoise.setEnabled(p.noiseReduction && !saver && !mLowDelay.load());
+    // Automatic place selection listens to the AI's speech detector even in
+    // places where its noise removal is off (no delay is added for that).
+    mNoise.setAnalyse(autoPlace && !saver);
+    mFeatures.setPitchEnabled(!saver);
     mWdrc.setParams(kVolumeDb[mVolume.load()], p.kneeDb, p.ratio, p.floorDb);
 
     for (int ear = 0; ear < 2; ++ear) {
@@ -106,14 +137,37 @@ void Processor::process(const float *in, int inFrames, float *out, int outFrames
     bool own = false;
     float inPeakDb = -120.0f;
 
+    // Voice profile changes from the UI.
+    int cmd = mProfileCmd.exchange(0);
+    if (cmd == 1) {
+        mSpeaker.setProfile(mPendingProfile, mPendingProfile + VoiceModel::kDims);
+        mHasProfile.store(true);
+    } else if (cmd == 2) {
+        mSpeaker.clearProfile();
+        mHasProfile.store(false);
+    }
+    int learn = mLearnState.load();
+    if (learn == 1 && !mLearnStarted) { mSpeaker.beginLearning(); mLearnStarted = true; }
+    const bool autoPlace = mAuto.load();
+    const bool needFeatures = autoPlace || learn == 1 || mSpeaker.hasProfile();
+    const float loudDb = mOwnVoiceDb.load() - 3.0f;
+
     for (int i = 0; i < outFrames; ++i) {
         float x = (i < inFrames && !muted) ? in[i] : 0.0f;
 
         x = mLowCut.process(x);
+
+        // Every 10 ms: voice features for the wearer's voice model and the place detector.
+        if (needFeatures && mFeatures.push(x)) {
+            if (learn == 1) mSpeaker.learn(mFeatures);
+            else mSpeaker.update(mFeatures, mOwnVoice.levelDb() > loudDb);
+            if (autoPlace) mScene.push(mFeatures.levelDb(), mNoise.speechProb());
+        }
+
         // Detect own voice on the raw mic level. The gain is applied after the
         // compressor (so the compressor cannot undo it); with AI noise reduction on
         // the audio is 10 ms behind the detector, which acts as a small look-ahead.
-        float duck = mOwnVoice.detect(x);
+        float duck = mOwnVoice.detect(x, mSpeaker.otherSpeaker());
         inPeakDb = std::max(inPeakDb, mOwnVoice.levelDb());
         x = mNoise.process(x);
         x = mWdrc.process(x);
@@ -157,6 +211,23 @@ void Processor::process(const float *in, int inFrames, float *out, int outFrames
     mNrActive.store(mNoise.active());
     mHowl.store(howl);
     mOwnActive.store(own);
+    mSpeakerScore.store(mSpeaker.score());
+
+    // Finish voice learning when the UI asks.
+    if (learn == 2) {
+        float mean[VoiceModel::kDims], var[VoiceModel::kDims];
+        if (mSpeaker.finishLearning(mean, var)) {
+            std::copy(mean, mean + VoiceModel::kDims, mLearned);
+            std::copy(var, var + VoiceModel::kDims, mLearned + VoiceModel::kDims);
+            mHasProfile.store(true);
+            mLearnState.store(3);
+        } else {
+            mLearnState.store(4);
+        }
+        mLearnStarted = false;
+    }
+    // The AI picked a different place: apply its preset from the next block.
+    if (autoPlace && mScene.place() != mAppliedPlace) mDirty.store(true);
     mInLevelDb.store(inPeakDb);
 }
 

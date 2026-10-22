@@ -10,3 +10,6 @@ captures/
 *.keystore
 *.jks
 native-tests/build/
+# Downloaded at build time by scripts/fetch_rnnoise_model.sh
+app/src/main/cpp/third_party/rnnoise2/src/rnnoise_data.c
+app/src/main/cpp/third_party/rnnoise2/src/rnnoise_data.h

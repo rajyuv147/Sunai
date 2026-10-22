@@ -6,10 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CPP ${CMAKE_CURRENT_LIST_DIR}/../app/src/main/cpp)
-file(GLOB RNNOISE_SRC ${CPP}/third_party/rnnoise/src/*.c)
-
-add_library(rnnoise STATIC ${RNNOISE_SRC})
-target_include_directories(rnnoise PUBLIC ${CPP}/third_party/rnnoise/include)
+include(${CPP}/third_party/rnnoise.cmake)
 target_compile_options(rnnoise PRIVATE -O2 -w)
 target_link_libraries(rnnoise PUBLIC m)
 

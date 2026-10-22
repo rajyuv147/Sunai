@@ -54,6 +54,18 @@ class Prefs(context: Context) {
         get() = sp.getFloat("own_voice_db", -26f)
         set(v) = sp.edit().putFloat("own_voice_db", v.coerceIn(-50f, -6f)).apply()
 
+    /** Let the AI choose Home / Talk / Crowd. */
+    var autoPlace: Boolean
+        get() = sp.getBoolean("auto_place", true)
+        set(v) = sp.edit().putBoolean("auto_place", v).apply()
+
+    /** The wearer's learned voice model (18 numbers), or null if not learned yet. */
+    var voiceProfile: FloatArray?
+        get() = sp.getString("voice_profile", null)
+            ?.split(',')?.mapNotNull { it.toFloatOrNull() }
+            ?.takeIf { it.size == 18 }?.toFloatArray()
+        set(v) = sp.edit().putString("voice_profile", v?.joinToString(",")).apply()
+
     /** Audio settings level (0 fastest … 3 safest) that last worked on this phone. */
     var audioLevel: Int
         get() = sp.getInt("audio_level", 0)

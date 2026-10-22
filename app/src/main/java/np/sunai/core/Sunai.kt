@@ -183,6 +183,29 @@ object Sunai {
         notifyChanged()
     }
 
+    /** Manual place (turns the AI's automatic choice off). */
+    fun pickPlace(p: Int) {
+        prefs.autoPlace = false
+        NativeAudio.setAutoPlace(false)
+        setPlace(p)
+    }
+
+    fun setAutoPlace(on: Boolean) {
+        prefs.autoPlace = on
+        NativeAudio.setAutoPlace(on)
+        notifyChanged()
+    }
+
+    /** The place in use right now (the AI's choice when automatic). */
+    val currentPlace: Int
+        get() = if (prefs.autoPlace && NativeAudio.isRunning()) NativeAudio.getAutoPlace() else prefs.place
+
+    fun saveVoiceProfile(profile: FloatArray?) {
+        prefs.voiceProfile = profile
+        NativeAudio.setVoiceProfile(profile)
+        notifyChanged()
+    }
+
     fun setVoiceLang(lang: String) { prefs.voiceLang = lang; notifyChanged() }
 
     fun saveBoost(ear: Int, band: Int, db: Float) {
@@ -199,6 +222,8 @@ object Sunai {
         NativeAudio.setLowDelay(prefs.lowDelay)
         NativeAudio.setSaver(saverOn)
         NativeAudio.setOwnVoice(prefs.ownVoice, prefs.ownVoiceDb)
+        NativeAudio.setAutoPlace(prefs.autoPlace)
+        NativeAudio.setVoiceProfile(prefs.voiceProfile)
         for (ear in 0..1) for (b in 0 until BANDS) NativeAudio.setBoost(ear, b, prefs.boost(ear, b))
     }
 

@@ -42,6 +42,32 @@ JNIEXPORT void JNICALL FN(setOwnVoice)(JNIEnv *, jobject, jboolean on, jfloat th
 }
 JNIEXPORT jfloat JNICALL FN(getInputLevelDb)(JNIEnv *, jobject) { return engine().processor().inputLevelDb(); }
 JNIEXPORT jboolean JNICALL FN(isOwnVoiceActive)(JNIEnv *, jobject) { return engine().processor().ownVoiceActive(); }
+JNIEXPORT void JNICALL FN(setAutoPlace)(JNIEnv *, jobject, jboolean on) { engine().processor().setAutoPlace(on); }
+JNIEXPORT jint JNICALL FN(getAutoPlace)(JNIEnv *, jobject) { return engine().processor().autoPlace(); }
+JNIEXPORT jfloat JNICALL FN(getNoiseFloorDb)(JNIEnv *, jobject) { return engine().processor().noiseFloorDb(); }
+JNIEXPORT void JNICALL FN(setVoiceProfile)(JNIEnv *env, jobject, jfloatArray profile) {
+    if (!profile || env->GetArrayLength(profile) != sunai::Processor::kProfile) {
+        engine().processor().setVoiceProfile(nullptr);
+        return;
+    }
+    float buf[sunai::Processor::kProfile];
+    env->GetFloatArrayRegion(profile, 0, sunai::Processor::kProfile, buf);
+    engine().processor().setVoiceProfile(buf);
+}
+JNIEXPORT void JNICALL FN(startVoiceLearning)(JNIEnv *, jobject) { engine().processor().startVoiceLearning(); }
+JNIEXPORT void JNICALL FN(stopVoiceLearning)(JNIEnv *, jobject) { engine().processor().stopVoiceLearning(); }
+JNIEXPORT jint JNICALL FN(getVoiceLearningState)(JNIEnv *, jobject) {
+    return engine().processor().voiceLearningState(nullptr);
+}
+JNIEXPORT jfloatArray JNICALL FN(getLearnedVoiceProfile)(JNIEnv *env, jobject) {
+    float buf[sunai::Processor::kProfile];
+    if (engine().processor().voiceLearningState(buf) != 3) return nullptr;
+    jfloatArray arr = env->NewFloatArray(sunai::Processor::kProfile);
+    env->SetFloatArrayRegion(arr, 0, sunai::Processor::kProfile, buf);
+    return arr;
+}
+JNIEXPORT jboolean JNICALL FN(hasVoiceProfile)(JNIEnv *, jobject) { return engine().processor().hasVoiceProfile(); }
+JNIEXPORT jfloat JNICALL FN(getSpeakerScore)(JNIEnv *, jobject) { return engine().processor().speakerScore(); }
 JNIEXPORT void JNICALL FN(setMuted)(JNIEnv *, jobject, jboolean on) { engine().processor().setMuted(on); }
 
 JNIEXPORT void JNICALL FN(playTone)(JNIEnv *, jobject, jfloat freq, jint ear, jfloat levelDb, jfloat ms) {
