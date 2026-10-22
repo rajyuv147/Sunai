@@ -114,6 +114,47 @@ private:
     float mGain = 1.0f, mHeld = 0.0f, mRecover = 1.0f, mAttack = 1.0f;
 };
 
+// Own-voice reduction. The wearer's own voice reaches the phone microphone
+// much louder than other people's (it is closer), and with earphone delay it
+// comes back as an annoying echo. When the input is louder than a threshold
+// (learned from the wearer's voice), the output is turned down quickly and
+// held down through the short gaps between words.
+class OwnVoiceGate {
+public:
+    void setup(float fs) {
+        mEnv.setup(fs, 1.0f, 40.0f);
+        mAttack = coeffForMs(fs, 3.0f);
+        mRelease = coeffForMs(fs, 120.0f);
+        mHoldSamples = static_cast<int>(0.18f * fs);
+    }
+    void setParams(bool enabled, float thresholdDb, float duckDb) {
+        mEnabled = enabled;
+        mThresholdDb = thresholdDb;
+        mDuck = dbToLin(duckDb);
+    }
+    // Feed the raw microphone signal; returns the gain to apply to the output.
+    inline float detect(float x) {
+        float levelDb = linToDb(mEnv.process(x));
+        float target = 1.0f;
+        if (mEnabled) {
+            if (levelDb > mThresholdDb) { mHold = mHoldSamples; target = mDuck; }
+            else if (mHold > 0) { --mHold; target = mDuck; }
+        }
+        float c = target < mGain ? mAttack : mRelease;
+        mGain = c * mGain + (1.0f - c) * target;
+        return mGain;
+    }
+    float levelDb() const { return linToDb(mEnv.value()); }
+    bool active() const { return mGain < 0.7f; }
+    void reset() { mEnv.reset(); mGain = 1.0f; mHold = 0; }
+private:
+    Envelope mEnv;
+    bool mEnabled = true;
+    float mThresholdDb = -26.0f, mDuck = 0.125f;
+    float mGain = 1.0f, mAttack = 0.0f, mRelease = 0.0f;
+    int mHold = 0, mHoldSamples = 0;
+};
+
 // Peak limiter with instant attack: output never goes above the ceiling.
 // This is the ear-safety stage.
 class Limiter {

@@ -144,6 +144,25 @@ int main() {
     }
 
     {
+        std::printf("Own-voice reduction\n");
+        Processor on; on.prepare(kFs); on.setPlace(0); on.setVolume(2); on.setSafety(false);
+        on.setOwnVoice(true, -26.0f);
+        Processor off; off.prepare(kFs); off.setPlace(0); off.setVolume(2); off.setSafety(false);
+        off.setOwnVoice(false, -26.0f);
+        // Own voice: loud at the phone mic (-14 dBFS)
+        float loudOn = rms(runSine(on, 300.0f, -14.0f, 0.6f), 0, 4800);
+        float loudOff = rms(runSine(off, 300.0f, -14.0f, 0.6f), 0, 4800);
+        std::printf("        own voice: %.1f dB lower\n", linToDb(loudOff) - linToDb(loudOn));
+        CHECK(loudOn < loudOff * 0.25f, "loud own voice is turned down (>12 dB)");
+        CHECK(on.ownVoiceActive(), "own voice is detected");
+        // Other people: softer at the mic (-45 dBFS). Run long enough for the hold to end.
+        float softOn = rms(runSine(on, 300.0f, -45.0f, 1.0f), 0, 24000);
+        float softOff = rms(runSine(off, 300.0f, -45.0f, 1.0f), 0, 24000);
+        CHECK(softOn > softOff * 0.9f, "other people's softer speech is not turned down");
+        CHECK(on.inputLevelDb() > -50.0f && on.inputLevelDb() < -40.0f, "input level reported for calibration");
+    }
+
+    {
         std::printf("Speed\n");
         Processor p; p.prepare(kFs); p.setPlace(2);  // heaviest: crowd with AI
         auto t0 = std::chrono::steady_clock::now();

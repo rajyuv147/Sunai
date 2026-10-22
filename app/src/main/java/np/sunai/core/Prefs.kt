@@ -45,6 +45,15 @@ class Prefs(context: Context) {
     fun setBoost(ear: Int, band: Int, db: Float) =
         sp.edit().putFloat("boost_${ear}_$band", db).apply()
 
+    /** Own-voice reduction on/off and its threshold (dBFS), learned from the wearer's voice. */
+    var ownVoice: Boolean
+        get() = sp.getBoolean("own_voice", true)
+        set(v) = sp.edit().putBoolean("own_voice", v).apply()
+
+    var ownVoiceDb: Float
+        get() = sp.getFloat("own_voice_db", -26f)
+        set(v) = sp.edit().putFloat("own_voice_db", v.coerceIn(-50f, -6f)).apply()
+
     /** Audio settings level (0 fastest … 3 safest) that last worked on this phone. */
     var audioLevel: Int
         get() = sp.getInt("audio_level", 0)

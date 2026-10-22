@@ -27,6 +27,11 @@ object NativeAudio {
     external fun setSaver(on: Boolean)
     external fun setLowDelay(on: Boolean)
     external fun setMuted(on: Boolean)
+    /** Turn down sounds louder than thresholdDb (the wearer's own voice, close to the phone). */
+    external fun setOwnVoice(on: Boolean, thresholdDb: Float)
+    /** Loudest microphone level (dBFS) in the latest audio block; used to learn the wearer's voice. */
+    external fun getInputLevelDb(): Float
+    external fun isOwnVoiceActive(): Boolean
 
     external fun playTone(freqHz: Float, ear: Int, levelDb: Float, durationMs: Float)
     external fun stopTone()

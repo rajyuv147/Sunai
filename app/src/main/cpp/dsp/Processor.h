@@ -36,6 +36,7 @@ public:
     void setSaver(bool on);                    // battery saver
     void setLowDelay(bool on);                 // skip the 10 ms AI stage
     void setMuted(bool on);                    // mic path silent (e.g. during the ear test)
+    void setOwnVoice(bool on, float thresholdDb); // turn down the wearer's own (loud) voice
 
     ToneGenerator &tones() { return mTone; }
 
@@ -44,6 +45,8 @@ public:
     bool noiseReductionActive() const { return mNrActive.load(); }
     bool howlDetected() const { return mHowl.load(); }
     int extraLatencyFrames() const { return mNrLatency.load(); }
+    float inputLevelDb() const { return mInLevelDb.load(); }  // loudest mic level in the last block
+    bool ownVoiceActive() const { return mOwnActive.load(); }
 
     // ---- Audio thread ----
     // `in` holds `inFrames` mono samples (may be fewer than outFrames if the
@@ -60,18 +63,23 @@ private:
     std::atomic<int> mVolume{3}, mPlace{1}, mBalance{0};
     std::atomic<bool> mSafety{true}, mSaver{false}, mLowDelay{false}, mMuted{false};
     std::atomic<float> mBoost[2][kBands] = {};
+    std::atomic<bool> mOwnVoiceOn{true};
+    std::atomic<float> mOwnVoiceDb{-26.0f};
     std::atomic<bool> mDirty{true};
 
     // Status
     std::atomic<float> mLevel{0.0f};
     std::atomic<bool> mNrActive{false}, mHowl{false};
     std::atomic<int> mNrLatency{0};
+    std::atomic<float> mInLevelDb{-120.0f};
+    std::atomic<bool> mOwnActive{false};
 
     // DSP blocks (audio thread only)
     Biquad mLowCut;
     NoiseReducer mNoise;
     Wdrc mWdrc;
     HowlGuard mHowlGuard;
+    OwnVoiceGate mOwnVoice;
     Biquad mEq[2][kBands];
     Limiter mLimit[2];
     ToneGenerator mTone;

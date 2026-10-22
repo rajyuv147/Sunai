@@ -144,6 +144,38 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- Own voice: on/off + learn the wearer's voice -->
+            <LinearLayout style="@style/Sunai.Card" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="12dp"
+                android:orientation="vertical" android:paddingTop="2dp">
+                <include android:id="@+id/row_own_voice" layout="@layout/toggle_row" />
+                <LinearLayout
+                    android:id="@+id/learn_voice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:minHeight="64dp"
+                    android:orientation="horizontal"
+                    android:padding="12dp">
+                    <ImageView android:id="@+id/learn_icon" android:layout_width="34dp"
+                        android:layout_height="34dp" android:importantForAccessibility="no"
+                        android:src="@drawable/ic_place_talk" />
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp" android:layout_weight="1"
+                        android:orientation="vertical">
+                        <TextView android:id="@+id/learn_text" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:text="@string/helper_learn_voice"
+                            android:textSize="17sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/learn_sub" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:text="@string/helper_learn_hint"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
             <!-- Switches -->
             <LinearLayout style="@style/Sunai.Card" android:layout_width="match_parent"
                 android:layout_height="wrap_content" android:layout_marginTop="12dp"

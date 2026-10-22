@@ -34,6 +34,8 @@ void Processor::prepare(float sampleRate) {
     mNoise.setSampleRate(sampleRate);
     mWdrc.setup(sampleRate);
     mHowlGuard.setup(sampleRate);
+    mOwnVoice.setup(sampleRate);
+    mOwnVoice.reset();
     for (auto &l : mLimit) l.setup(sampleRate);
     mTone.setSampleRate(sampleRate);
     mLowCut.reset();
@@ -56,6 +58,11 @@ void Processor::setSafety(bool on) { mSafety.store(on); mDirty.store(true); }
 void Processor::setSaver(bool on) { mSaver.store(on); mDirty.store(true); }
 void Processor::setLowDelay(bool on) { mLowDelay.store(on); mDirty.store(true); }
 void Processor::setMuted(bool on) { mMuted.store(on); }
+void Processor::setOwnVoice(bool on, float thresholdDb) {
+    mOwnVoiceOn.store(on);
+    mOwnVoiceDb.store(std::clamp(thresholdDb, -50.0f, -6.0f));
+    mDirty.store(true);
+}
 
 void Processor::applySettings() {
     const PlacePreset &p = kPresets[mPlace.load()];
@@ -86,6 +93,8 @@ void Processor::applySettings() {
     for (auto &l : mLimit) l.setCeilingDb(ceiling);
 
     mNrLatency.store(mNoise.latencyFrames());
+    // Own voice is turned down by 18 dB: still faintly audible, so it feels natural.
+    mOwnVoice.setParams(mOwnVoiceOn.load(), mOwnVoiceDb.load(), -18.0f);
 }
 
 void Processor::process(const float *in, int inFrames, float *out, int outFrames) {
@@ -94,14 +103,23 @@ void Processor::process(const float *in, int inFrames, float *out, int outFrames
     const bool muted = mMuted.load();
     const bool saver = mSaver.load();
     bool howl = false;
+    bool own = false;
+    float inPeakDb = -120.0f;
 
     for (int i = 0; i < outFrames; ++i) {
         float x = (i < inFrames && !muted) ? in[i] : 0.0f;
 
         x = mLowCut.process(x);
+        // Detect own voice on the raw mic level. The gain is applied after the
+        // compressor (so the compressor cannot undo it); with AI noise reduction on
+        // the audio is 10 ms behind the detector, which acts as a small look-ahead.
+        float duck = mOwnVoice.detect(x);
+        inPeakDb = std::max(inPeakDb, mOwnVoice.levelDb());
         x = mNoise.process(x);
         x = mWdrc.process(x);
         x = mHowlGuard.process(x);
+        x *= duck;
+        if (duck < 0.7f) own = true;
 
         float l = x, r = x;
         // In battery saver, skip the equalizer while nobody is talking.
@@ -138,6 +156,8 @@ void Processor::process(const float *in, int inFrames, float *out, int outFrames
     }
     mNrActive.store(mNoise.active());
     mHowl.store(howl);
+    mOwnActive.store(own);
+    mInLevelDb.store(inPeakDb);
 }
 
 }  // namespace sunai

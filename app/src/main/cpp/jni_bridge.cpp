@@ -37,6 +37,11 @@ JNIEXPORT void JNICALL FN(setBalance)(JNIEnv *, jobject, jint b) { engine().proc
 JNIEXPORT void JNICALL FN(setSafety)(JNIEnv *, jobject, jboolean on) { engine().processor().setSafety(on); }
 JNIEXPORT void JNICALL FN(setSaver)(JNIEnv *, jobject, jboolean on) { engine().processor().setSaver(on); }
 JNIEXPORT void JNICALL FN(setLowDelay)(JNIEnv *, jobject, jboolean on) { engine().processor().setLowDelay(on); }
+JNIEXPORT void JNICALL FN(setOwnVoice)(JNIEnv *, jobject, jboolean on, jfloat thresholdDb) {
+    engine().processor().setOwnVoice(on, thresholdDb);
+}
+JNIEXPORT jfloat JNICALL FN(getInputLevelDb)(JNIEnv *, jobject) { return engine().processor().inputLevelDb(); }
+JNIEXPORT jboolean JNICALL FN(isOwnVoiceActive)(JNIEnv *, jobject) { return engine().processor().ownVoiceActive(); }
 JNIEXPORT void JNICALL FN(setMuted)(JNIEnv *, jobject, jboolean on) { engine().processor().setMuted(on); }
 
 JNIEXPORT void JNICALL FN(playTone)(JNIEnv *, jobject, jfloat freq, jint ear, jfloat levelDb, jfloat ms) {

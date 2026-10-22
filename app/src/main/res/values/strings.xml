@@ -62,6 +62,14 @@
     <string name="helper_saver">ब्याट्री बचत</string>
     <string name="helper_saver_sub">AI हल्ला सफा बन्द, ब्याट्री धेरै चल्छ</string>
     <string name="helper_status">स्थिति</string>
+    <string name="helper_own_voice">आफ्नो आवाज घटाउने</string>
+    <string name="helper_own_voice_sub">आफू बोल्दा आफ्नै आवाज ठूलो सुनिँदैन</string>
+    <string name="helper_learn_voice">मेरो आवाज सिकाउनुहोस्</string>
+    <string name="helper_learn_hint">थिचेर ५ सेकेन्ड सामान्य रूपमा बोल्नुहोस्</string>
+    <string name="helper_learn_listening">बोल्नुहोस्… %d</string>
+    <string name="helper_learn_done">आवाज सिकियो (%d dB)</string>
+    <string name="helper_learn_quiet">आवाज सुनिएन। फोन नजिक राखेर फेरि बोल्नुहोस्।</string>
+    <string name="helper_need_listening">पहिले गृहमा ठूलो कान बटन थिचेर सुनाइ खोल्नुहोस्।</string>
     <string name="lang_ne">नेपाली</string>
     <string name="lang_mai">मैथिली</string>
     <string name="lang_bho">भोजपुरी</string>
@@ -75,7 +83,7 @@
     <string name="notif_text">माइकले सुनेर इयरफोनमा पठाउँदै छ। रेकर्ड हुँदैन।</string>
 
     <!-- Spoken help (used by text-to-speech until recorded clips are added) -->
-    <string name="say_home">ठूलो गोलो बटन थिच्दा सुनाइ खुल्छ। नीलो बटनले आवाज घटाउने बढाउने गर्छ। तलका चित्रले ठाउँ छान्छ।</string>
+    <string name="say_home">ठूलो गोलो बटन थिच्दा सुनाइ खुल्छ। नीलो बटनले आवाज घटाउने बढाउने गर्छ। तलका चित्रले ठाउँ छान्छ। फोनलाई कुरा गर्ने मानिसतिर फर्काएर, आफ्नो मुखबाट टाढा राख्नुहोस्।</string>
     <string name="say_connect">पहिले इयरफोनको बट्टा खोल्नुहोस्। अनि नीलो बटन थिच्नुहोस्। अनि इयरफोन कानमा लगाउनुहोस्।</string>
     <string name="say_test">एउटा कान छान्नुहोस्। ठूलो बटन थिचेर आवाज सुन्नुहोस्। सुन्नुभयो भने हरियो, सुन्नुभएन भने रातो थिच्नुहोस्।</string>
     <string name="say_helper">यो भाग परिवारको सदस्यले मिलाउने हो। खोल्न तलको बटन तीन सेकेन्ड थिचिराख्नुहोस्।</string>
