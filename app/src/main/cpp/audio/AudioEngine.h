@@ -82,6 +82,7 @@ private:
     // Diagnostics
     std::atomic<uint64_t> mInFrames{0}, mOutFrames{0}, mUnderruns{0}, mDropped{0};
     std::atomic<float> mMicPeak{0.0f};
+    std::atomic<bool> mMicHeard{false};   // any non-zero mic sample since start
     float mMicPeakAcc = 0.0f;
     int mMicPeakCount = 0;
     std::mutex mErrLock;

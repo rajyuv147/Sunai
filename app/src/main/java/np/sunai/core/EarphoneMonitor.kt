@@ -53,7 +53,8 @@ class EarphoneMonitor(context: Context) {
         val outs = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
         // Prefer the fastest connection when several are present.
         val ranked = outs.mapNotNull { d -> kindOf(d.type)?.let { it to d } }
-            .sortedBy { (k, _) -> k.ordinal }
+            .sortedWith(compareBy({ it.first.ordinal },
+                { if (it.second.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) 1 else 0 }))
         val best = ranked.firstOrNull()
         // Always listen with the phone's own microphone (earbud mics are too close
         // to the speaker and would squeal).

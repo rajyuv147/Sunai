@@ -39,8 +39,8 @@ public:
         float s = mAmp * env * std::sin(mPhase);
         mPhase += 2.0f * kPi * mFreq / mFs;
         if (mPhase > 2.0f * kPi) mPhase -= 2.0f * kPi;
-        left = (mEar == 0) ? s : 0.0f;
-        right = (mEar == 1) ? s : 0.0f;
+        left = (mEar == 0 || mEar == 2) ? s : 0.0f;    // ear 2 = both ears
+        right = (mEar == 1 || mEar == 2) ? s : 0.0f;
         if (--mRemaining == 0) mPlaying.store(false);
         return true;
     }
