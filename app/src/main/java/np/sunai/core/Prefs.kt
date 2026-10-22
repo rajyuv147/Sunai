@@ -45,6 +45,11 @@ class Prefs(context: Context) {
     fun setBoost(ear: Int, band: Int, db: Float) =
         sp.edit().putFloat("boost_${ear}_$band", db).apply()
 
+    /** Audio settings level (0 fastest … 3 safest) that last worked on this phone. */
+    var audioLevel: Int
+        get() = sp.getInt("audio_level", 0)
+        set(v) = sp.edit().putInt("audio_level", v.coerceIn(0, 3)).apply()
+
     var testDone: Boolean
         get() = sp.getBoolean("test_done", false)
         set(v) = sp.edit().putBoolean("test_done", v).apply()

@@ -8,9 +8,10 @@ namespace sunai {
 constexpr float Processor::kBandFreqs[Processor::kBands];
 
 namespace {
-// Amplification for each volume step. Speech at the phone mic is around
-// -35 dBFS, so the top step brings it close to the limiter ceiling.
-constexpr float kVolumeDb[6] = {0.0f, 6.0f, 12.0f, 18.0f, 24.0f, 30.0f};
+// Amplification for each volume step. Real phone mics with no auto-gain
+// capture normal speech at 1-2 m around -45 to -55 dBFS, so the steps go
+// from +10 dB up to +34 dB; the compressor and limiter keep loud sounds safe.
+constexpr float kVolumeDb[6] = {0.0f, 10.0f, 16.0f, 22.0f, 28.0f, 34.0f};
 
 struct PlacePreset {
     float lowCutHz;
@@ -22,9 +23,9 @@ struct PlacePreset {
 // Talk: one-to-one conversation, AI noise reduction on.
 // Crowd: market or bus, stronger low-cut and compression.
 constexpr PlacePreset kPresets[3] = {
-    {100.0f, false, -42.0f, 2.0f, -64.0f, 0.0f},
-    {120.0f, true,  -40.0f, 2.0f, -60.0f, 2.0f},
-    {220.0f, true,  -38.0f, 3.0f, -55.0f, 4.0f},
+    {100.0f, false, -42.0f, 2.0f, -72.0f, 0.0f},
+    {120.0f, true,  -40.0f, 2.0f, -68.0f, 2.0f},
+    {200.0f, true,  -38.0f, 3.0f, -62.0f, 4.0f},
 };
 }  // namespace
 

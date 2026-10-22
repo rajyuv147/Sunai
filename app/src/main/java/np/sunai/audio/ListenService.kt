@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.widget.Toast
 import np.sunai.R
 import np.sunai.core.Sunai
 import np.sunai.ui.MainActivity
@@ -31,6 +32,8 @@ class ListenService : Service() {
             startForeground(NOTIFICATION_ID, notification)
         }
         if (!Sunai.openEngine()) {
+            // Tell the helper what went wrong (the user hears the button turn off).
+            Toast.makeText(this, NativeAudio.getDiagnostics(), Toast.LENGTH_LONG).show()
             Sunai.stopListening()
             stopSelf()
         }
