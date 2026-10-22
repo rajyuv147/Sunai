@@ -6,6 +6,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write   # needed to publish releases and the apk branch
+
 jobs:
   native-tests:
     name: Sound engine tests
@@ -75,3 +78,25 @@ jobs:
         with:
           name: sunai-apk
           path: app/build/outputs/apk/**/*.apk
+
+      # Publish a GitHub Release with a ready-to-install APK, and keep the latest
+      # APK on the "apk" branch so it can be fetched with plain git.
+      - name: Publish release and apk branch
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          TAG="v${VERSION}-build${{ github.run_number }}"
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk "dist/sunai-${VERSION}.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk "dist/sunai-${VERSION}-debug.apk"
+          gh release create "$TAG" dist/*.apk \
+            --title "Sunai ${VERSION} (build ${{ github.run_number }})" \
+            --notes "Install **sunai-${VERSION}.apk** on the phone. Test build: signed with a test key, not for Google Play." \
+            --target "${{ github.sha }}"
+          cd dist
+          git init -q -b apk
+          git -c user.name="sunai-ci" -c user.email="ci@sunai.invalid" add .
+          git -c user.name="sunai-ci" -c user.email="ci@sunai.invalid" commit -q -m "APK from ${{ github.sha }} ($TAG)"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}" apk
