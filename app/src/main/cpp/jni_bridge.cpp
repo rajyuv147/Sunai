@@ -42,6 +42,7 @@ JNIEXPORT void JNICALL FN(setOwnVoice)(JNIEnv *, jobject, jboolean on, jfloat th
 }
 JNIEXPORT jfloat JNICALL FN(getInputLevelDb)(JNIEnv *, jobject) { return engine().processor().inputLevelDb(); }
 JNIEXPORT jboolean JNICALL FN(isOwnVoiceActive)(JNIEnv *, jobject) { return engine().processor().ownVoiceActive(); }
+JNIEXPORT void JNICALL FN(setExtraLoud)(JNIEnv *, jobject, jboolean on) { engine().processor().setExtraLoud(on); }
 JNIEXPORT void JNICALL FN(setAutoPlace)(JNIEnv *, jobject, jboolean on) { engine().processor().setAutoPlace(on); }
 JNIEXPORT jint JNICALL FN(getAutoPlace)(JNIEnv *, jobject) { return engine().processor().autoPlace(); }
 JNIEXPORT jfloat JNICALL FN(getNoiseFloorDb)(JNIEnv *, jobject) { return engine().processor().noiseFloorDb(); }

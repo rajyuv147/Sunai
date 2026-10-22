@@ -63,6 +63,8 @@
     <string name="helper_saver">ब्याट्री बचत</string>
     <string name="helper_saver_sub">AI हल्ला सफा बन्द, ब्याट्री धेरै चल्छ</string>
     <string name="helper_status">स्थिति</string>
+    <string name="helper_extra_loud">धेरै ठूलो आवाज</string>
+    <string name="helper_extra_loud_sub">धेरै कम सुन्नेका लागि (+१० dB)</string>
     <string name="helper_own_voice">आफ्नो आवाज घटाउने</string>
     <string name="helper_own_voice_sub">आफू बोल्दा आफ्नै आवाज ठूलो सुनिँदैन</string>
     <string name="helper_learn_voice">मेरो आवाज सिकाउनुहोस्</string>
@@ -87,7 +89,7 @@
     <!-- Spoken help (used by text-to-speech until recorded clips are added) -->
     <string name="say_home">ठूलो गोलो बटन थिच्दा सुनाइ खुल्छ। नीलो बटनले आवाज घटाउने बढाउने गर्छ। तलका चित्रले ठाउँ छान्छ। फोनलाई कुरा गर्ने मानिसतिर फर्काएर, आफ्नो मुखबाट टाढा राख्नुहोस्।</string>
     <string name="say_connect">पहिले इयरफोनको बट्टा खोल्नुहोस्। अनि नीलो बटन थिच्नुहोस्। अनि इयरफोन कानमा लगाउनुहोस्।</string>
-    <string name="say_test">एउटा कान छान्नुहोस्। ठूलो बटन थिचेर आवाज सुन्नुहोस्। सुन्नुभयो भने हरियो, सुन्नुभएन भने रातो थिच्नुहोस्।</string>
+    <string name="say_test">एउटा कान छान्नुहोस्। आवाज आफैं बज्छ, सुरुमा धेरै सानो। सुन्नुभयो भने हरियो थिच्नुहोस्। सुन्नुभएन भने रातो थिच्नुहोस्, अनि आवाज अझ ठूलो बज्छ।</string>
     <string name="say_helper">यो भाग परिवारको सदस्यले मिलाउने हो। खोल्न तलको बटन तीन सेकेन्ड थिचिराख्नुहोस्।</string>
     <string name="say_no_earphone">पहिले इयरफोन लगाउनुहोस्।</string>
     <string name="say_connected">इयरफोन जोडियो।</string>

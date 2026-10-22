@@ -148,6 +148,19 @@ int main() {
     }
 
     {
+        std::printf("Extra loud\n");
+        Processor n; n.prepare(kFs); n.setPlace(0); n.setVolume(5);
+        Processor x; x.prepare(kFs); x.setPlace(0); x.setVolume(5); x.setExtraLoud(true);
+        auto a = runSine(n, 1000.0f, -60.0f, 1.0f);
+        auto b = runSine(x, 1000.0f, -60.0f, 1.0f);
+        std::printf("        very soft input: normal %.1f dBFS, extra loud %.1f dBFS\n",
+                    linToDb(rms(a, 0, 24000)), linToDb(rms(b, 0, 24000)));
+        CHECK(rms(b, 0, 24000) > rms(a, 0, 24000) * 2.0f, "extra loud is clearly louder");
+        auto c = runSine(x, 1000.0f, -3.0f, 1.0f);
+        CHECK(peak(c) <= std::pow(10.0f, -3.0f / 20.0f) + 1e-5f, "extra loud still never above -3 dBFS");
+    }
+
+    {
         std::printf("AI noise reduction delay\n");
         Processor p; p.prepare(kFs);
         p.setPlace(0); runSine(p, 1000, -40, 0.05f);

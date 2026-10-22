@@ -34,6 +34,7 @@ class HelperActivity : BaseActivity() {
     private lateinit var safety: Row
     private lateinit var saver: Row
     private lateinit var ownVoice: Row
+    private lateinit var extraLoud: Row
     private var learning = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,6 +61,8 @@ class HelperActivity : BaseActivity() {
         findViewById<View>(R.id.bal_knob).background =
             Ui.circle(this, Ui.color(this, R.color.blue), Ui.color(this, R.color.white), 4f)
 
+        extraLoud = row(R.id.row_extra_loud, R.drawable.ic_vol_up, R.color.blue, R.color.blue_soft,
+            R.string.helper_extra_loud, R.string.helper_extra_loud_sub) { Sunai.setExtraLoud(!Sunai.prefs.extraLoud) }
         lowDelay = row(R.id.row_low_delay, R.drawable.ic_bolt, R.color.green, R.color.green_soft,
             R.string.helper_low_delay, R.string.helper_low_delay_sub) { Sunai.setLowDelay(!Sunai.prefs.lowDelay) }
         safety = row(R.id.row_safety, R.drawable.ic_shield, R.color.blue, R.color.blue_soft,
@@ -139,6 +142,7 @@ class HelperActivity : BaseActivity() {
         Ui.setToggle(safety.track, safety.knob, Sunai.prefs.safety)
         Ui.setToggle(saver.track, saver.knob, Sunai.saverOn)
         Ui.setToggle(ownVoice.track, ownVoice.knob, Sunai.prefs.ownVoice)
+        Ui.setToggle(extraLoud.track, extraLoud.knob, Sunai.prefs.extraLoud)
 
         drawStatus()
     }

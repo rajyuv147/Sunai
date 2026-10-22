@@ -10,8 +10,10 @@ constexpr float Processor::kBandFreqs[Processor::kBands];
 namespace {
 // Amplification for each volume step. Real phone mics with no auto-gain
 // capture normal speech at 1-2 m around -45 to -55 dBFS, so the steps go
-// from +10 dB up to +34 dB; the compressor and limiter keep loud sounds safe.
-constexpr float kVolumeDb[6] = {0.0f, 10.0f, 16.0f, 22.0f, 28.0f, 34.0f};
+// from +12 dB up to +44 dB; the compressor and limiter keep loud sounds safe.
+constexpr float kVolumeDb[6] = {0.0f, 12.0f, 20.0f, 28.0f, 36.0f, 44.0f};
+// "Extra loud" for severe hearing loss: more gain and a higher output ceiling.
+constexpr float kExtraLoudDb = 10.0f;
 
 struct PlacePreset {
     float lowCutHz;
@@ -53,7 +55,7 @@ void Processor::setVolume(int level) { mVolume.store(std::clamp(level, 1, 5)); m
 void Processor::setPlace(int place) { mPlace.store(std::clamp(place, 0, 2)); mDirty.store(true); }
 void Processor::setBoost(int ear, int band, float db) {
     if (ear < 0 || ear > 1 || band < 0 || band >= kBands) return;
-    mBoost[ear][band].store(std::clamp(db, 0.0f, 20.0f));
+    mBoost[ear][band].store(std::clamp(db, 0.0f, 30.0f));
     mDirty.store(true);
 }
 void Processor::setBalance(int balance) { mBalance.store(std::clamp(balance, -5, 5)); mDirty.store(true); }
@@ -61,6 +63,7 @@ void Processor::setSafety(bool on) { mSafety.store(on); mDirty.store(true); }
 void Processor::setSaver(bool on) { mSaver.store(on); mDirty.store(true); }
 void Processor::setLowDelay(bool on) { mLowDelay.store(on); mDirty.store(true); }
 void Processor::setMuted(bool on) { mMuted.store(on); }
+void Processor::setExtraLoud(bool on) { mExtraLoud.store(on); mDirty.store(true); }
 void Processor::setOwnVoice(bool on, float thresholdDb) {
     mOwnVoiceOn.store(on);
     mOwnVoiceDb.store(std::clamp(thresholdDb, -50.0f, -6.0f));
@@ -101,7 +104,9 @@ void Processor::applySettings() {
     // places where its noise removal is off (no delay is added for that).
     mNoise.setAnalyse(autoPlace && !saver);
     mFeatures.setPitchEnabled(!saver);
-    mWdrc.setParams(kVolumeDb[mVolume.load()], p.kneeDb, p.ratio, p.floorDb);
+    const bool extra = mExtraLoud.load();
+    mWdrc.setParams(kVolumeDb[mVolume.load()] + (extra ? kExtraLoudDb : 0.0f), p.kneeDb,
+                    extra ? std::max(p.ratio, 3.0f) : p.ratio, p.floorDb);
 
     for (int ear = 0; ear < 2; ++ear) {
         for (int b = 0; b < kBands; ++b) {
@@ -120,7 +125,8 @@ void Processor::applySettings() {
     mGainR = bal < 0 ? 1.0f + 0.15f * bal : 1.0f;
 
     // Ear safety: with protection on the output never exceeds -6 dBFS.
-    float ceiling = mSafety.load() ? -6.0f : -1.0f;
+    // Extra loud raises the ceiling to -3 dBFS (still limited, still protected).
+    float ceiling = mSafety.load() ? (extra ? -3.0f : -6.0f) : -1.0f;
     for (auto &l : mLimit) l.setCeilingDb(ceiling);
 
     mNrLatency.store(mNoise.latencyFrames());

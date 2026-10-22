@@ -11,8 +11,8 @@ android {
         applicationId = "np.sunai"
         minSdk = 27            // Android 8.1: first version with the fast (MMAP) audio path
         targetSdk = 35
-        versionCode = 5
-        versionName = "0.2.0"
+        versionCode = 6
+        versionName = "0.2.1"
 
         ndk {
             // Only the processors real phones use. Keeps the APK small.

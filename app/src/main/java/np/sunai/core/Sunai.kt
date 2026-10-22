@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.media.AudioManager
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Handler
@@ -66,6 +67,7 @@ object Sunai {
         }
         listening = true
         micWarned = false
+        raisePhoneVolume()
         ListenService.start(app)
         loudMinutes = 0
         main.removeCallbacks(loudCheck)
@@ -76,6 +78,7 @@ object Sunai {
 
     fun stopListening() {
         listening = false
+        if (!testing) restorePhoneVolume()
         main.removeCallbacks(loudCheck)
         if (!testing) ListenService.stop(app)
         notifyChanged()
@@ -147,8 +150,15 @@ object Sunai {
             return false
         }
         testing = true
+        raisePhoneVolume()
         NativeAudio.setMuted(true)            // only test tones, no microphone sound
-        if (!NativeAudio.isRunning()) startEngine()
+        if (!NativeAudio.isRunning() && !startEngine()) {
+            Toast.makeText(app, NativeAudio.getDiagnostics(), Toast.LENGTH_LONG).show()
+            testing = false
+            NativeAudio.setMuted(false)
+            restorePhoneVolume()
+            return false
+        }
         return true
     }
 
@@ -160,6 +170,7 @@ object Sunai {
         if (!listening) {
             NativeAudio.stop()
             ListenService.stop(app)
+            restorePhoneVolume()
         }
     }
 
@@ -206,6 +217,38 @@ object Sunai {
         notifyChanged()
     }
 
+    fun setExtraLoud(on: Boolean) { prefs.extraLoud = on; NativeAudio.setExtraLoud(on); notifyChanged() }
+
+    // ---------------------------------------------------------------- phone volume
+
+    private var savedVolume = -1
+
+    /**
+     * Sunai controls loudness itself (with its own safety limit), so the phone's
+     * media volume is set to maximum while it runs and put back afterwards.
+     * Some phones show their own "high volume" warning: the user must accept it.
+     */
+    private fun raisePhoneVolume() {
+        val am = app.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val max = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        val cur = am.getStreamVolume(AudioManager.STREAM_MUSIC)
+        if (savedVolume < 0) savedVolume = cur
+        if (cur < max) {
+            try {
+                am.setStreamVolume(AudioManager.STREAM_MUSIC, max, AudioManager.FLAG_SHOW_UI)
+            } catch (_: SecurityException) {
+                // Do-not-disturb or a policy may block volume changes; keep going.
+            }
+        }
+    }
+
+    private fun restorePhoneVolume() {
+        if (savedVolume < 0) return
+        val am = app.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        try { am.setStreamVolume(AudioManager.STREAM_MUSIC, savedVolume, 0) } catch (_: SecurityException) {}
+        savedVolume = -1
+    }
+
     fun setVoiceLang(lang: String) { prefs.voiceLang = lang; notifyChanged() }
 
     fun saveBoost(ear: Int, band: Int, db: Float) {
@@ -222,6 +265,7 @@ object Sunai {
         NativeAudio.setLowDelay(prefs.lowDelay)
         NativeAudio.setSaver(saverOn)
         NativeAudio.setOwnVoice(prefs.ownVoice, prefs.ownVoiceDb)
+        NativeAudio.setExtraLoud(prefs.extraLoud)
         NativeAudio.setAutoPlace(prefs.autoPlace)
         NativeAudio.setVoiceProfile(prefs.voiceProfile)
         for (ear in 0..1) for (b in 0 until BANDS) NativeAudio.setBoost(ear, b, prefs.boost(ear, b))

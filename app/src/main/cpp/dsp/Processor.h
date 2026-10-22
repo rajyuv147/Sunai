@@ -40,6 +40,7 @@ public:
     void setMuted(bool on);                    // mic path silent (e.g. during the ear test)
     void setOwnVoice(bool on, float thresholdDb); // turn down the wearer's own (loud) voice
     void setAutoPlace(bool on);                // AI picks Home / Talk / Crowd
+    void setExtraLoud(bool on);                // +10 dB for severe hearing loss
 
     // Wearer voice profile: kProfile floats (means then variances).
     static constexpr int kProfile = 2 * VoiceModel::kDims;
@@ -81,6 +82,7 @@ private:
     std::atomic<bool> mOwnVoiceOn{true};
     std::atomic<float> mOwnVoiceDb{-26.0f};
     std::atomic<bool> mAuto{false};
+    std::atomic<bool> mExtraLoud{false};
     std::atomic<bool> mDirty{true};
     float mPendingProfile[kProfile] = {};
     std::atomic<int> mProfileCmd{0};      // 0 none, 1 set, 2 clear

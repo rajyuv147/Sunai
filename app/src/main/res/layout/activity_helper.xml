@@ -180,6 +180,7 @@
             <LinearLayout style="@style/Sunai.Card" android:layout_width="match_parent"
                 android:layout_height="wrap_content" android:layout_marginTop="12dp"
                 android:orientation="vertical" android:paddingTop="2dp">
+                <include android:id="@+id/row_extra_loud" layout="@layout/toggle_row" />
                 <include android:id="@+id/row_low_delay" layout="@layout/toggle_row" />
                 <include android:id="@+id/row_safety" layout="@layout/toggle_row" />
                 <include android:id="@+id/row_saver" layout="@layout/toggle_row" />

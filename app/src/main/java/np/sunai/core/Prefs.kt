@@ -54,6 +54,11 @@ class Prefs(context: Context) {
         get() = sp.getFloat("own_voice_db", -26f)
         set(v) = sp.edit().putFloat("own_voice_db", v.coerceIn(-50f, -6f)).apply()
 
+    /** +10 dB for severe hearing loss. */
+    var extraLoud: Boolean
+        get() = sp.getBoolean("extra_loud", false)
+        set(v) = sp.edit().putBoolean("extra_loud", v).apply()
+
     /** Let the AI choose Home / Talk / Crowd. */
     var autoPlace: Boolean
         get() = sp.getBoolean("auto_place", true)
