@@ -136,7 +136,8 @@ int main() {
 
     {
         std::printf("Amplification\n");
-        Processor p; p.prepare(kFs); p.setPlace(0); p.setSafety(true);
+        // Pure test tones count as noise for the AI, so measure gain with it off.
+        Processor p; p.prepare(kFs); p.setPlace(0); p.setSafety(true); p.setLowDelay(true);
         p.setVolume(1);
         auto quiet = runSine(p, 1000.0f, -45.0f, 1.0f);
         p.setVolume(5);
