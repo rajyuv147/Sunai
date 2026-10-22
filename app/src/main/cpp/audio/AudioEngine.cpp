@@ -1,6 +1,7 @@
 #include "AudioEngine.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <thread>
@@ -71,8 +72,10 @@ bool AudioEngine::openLocked() {
     const int rate = mOut->getSampleRate();
     mOutChannels = mOut->getChannelCount();
     mOutBurst = std::max(1, mOut->getFramesPerBurst());
-    // Two bursts is the smallest buffer that stays glitch-free on most phones.
+    // Start with two bursts (lowest delay); the latency tuner adds a burst at a
+    // time only if the phone misses deadlines, so slow phones stop crackling.
     mOut->setBufferSizeInFrames(std::min(mOut->getBufferCapacityInFrames(), mOutBurst * 2));
+    mTuner = std::make_unique<oboe::LatencyTuner>(*mOut);
 
     // ---- Phone microphone (input) at the same rate. ----
     oboe::InputPreset preset = oboe::InputPreset::VoiceRecognition;
@@ -151,7 +154,9 @@ bool AudioEngine::openLocked() {
 
 void AudioEngine::closeLocked() {
     mRunning.store(false);
-    if (mOut) { mOut->requestStop(); mOut->close(); mOut.reset(); }
+    if (mOut) { mOut->requestStop(); mOut->close(); }
+    mTuner.reset();
+    mOut.reset();
     if (mIn) { mIn->requestStop(); mIn->close(); mIn.reset(); }
 }
 
@@ -190,6 +195,7 @@ void AudioEngine::onInput(const float *data, int32_t frames, int32_t channels) {
 }
 
 void AudioEngine::onOutput(float *out, int32_t frames) {
+    auto t0 = std::chrono::steady_clock::now();
     uint32_t r = mRead.load(std::memory_order_relaxed);
     uint32_t w = mWrite.load(std::memory_order_acquire);
     uint32_t avail = w - r;
@@ -226,6 +232,15 @@ void AudioEngine::onOutput(float *out, int32_t frames) {
         }
     }
     mOutFrames.fetch_add(frames);
+
+    if (mTuner) mTuner->tune();
+    // Processing time as a share of the time this block lasts (smoothed).
+    int rate = mSampleRate.load();
+    if (rate > 0 && frames > 0) {
+        float used = std::chrono::duration<float>(std::chrono::steady_clock::now() - t0).count();
+        float load = used / (static_cast<float>(frames) / rate);
+        mCpuLoad.store(0.95f * mCpuLoad.load() + 0.05f * load);
+    }
 }
 
 void AudioEngine::onErrorAfterClose(oboe::AudioStream *stream, oboe::Result error) {
@@ -292,8 +307,15 @@ std::string AudioEngine::diagnostics() {
 #else
     const char *model = "rnn0.1";
 #endif
-    std::snprintf(buf, sizeof(buf), "%s %s | %s | mic %llu (%.0f dB) out %llu | under %llu drop %llu | err %s",
-                  mRunning.load() ? "ON" : "OFF", model, mConfig.c_str(),
+    int xruns = 0, bufFrames = 0;
+    if (mOut) {
+        auto x = mOut->getXRunCount();
+        if (x) xruns = x.value();
+        bufFrames = mOut->getBufferSizeInFrames();
+    }
+    std::snprintf(buf, sizeof(buf), "%s %s cpu %.0f%% buf %d xrun %d | %s | mic %llu (%.0f dB) out %llu | under %llu drop %llu | err %s",
+                  mRunning.load() ? "ON" : "OFF", model, 100.0f * mCpuLoad.load(), bufFrames, xruns,
+                  mConfig.c_str(),
                   static_cast<unsigned long long>(mInFrames.load()), peakDb,
                   static_cast<unsigned long long>(mOutFrames.load()),
                   static_cast<unsigned long long>(mUnderruns.load()),

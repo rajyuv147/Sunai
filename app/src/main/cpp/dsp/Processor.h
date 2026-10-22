@@ -60,7 +60,7 @@ public:
     float inputLevelDb() const { return mInLevelDb.load(); }  // loudest mic level in the last block
     bool ownVoiceActive() const { return mOwnActive.load(); }
     int autoPlace() const { return mScene.place(); }           // place the AI chose
-    float noiseFloorDb() const { return mScene.noiseFloorDb(); }
+    float noiseFloorDb() const { return mScene.noiseFloorDb(); }  // background hiss level
     bool hasVoiceProfile() const { return mHasProfile.load(); }
     float speakerScore() const { return mSpeakerScore.load(); } // >0 wearer, <0 someone else
 
@@ -72,6 +72,7 @@ public:
 
 private:
     void applySettings();
+    void updateGateFloor();
 
     float mFs = 48000.0f;
 
@@ -109,6 +110,9 @@ private:
     SceneClassifier mScene;
     int mAppliedPlace = -1;
     bool mLearnStarted = false;
+    float mFrameAcc = 0.0f;
+    int mFrameCount = 0;
+    float mPresetFloorDb = -66.0f, mGateFloorDb = -66.0f, mLastFloorSeen = -120.0f;
     Biquad mEq[2][kBands];
     Limiter mLimit[2];
     ToneGenerator mTone;

@@ -161,10 +161,34 @@ int main() {
     }
 
     {
+        std::printf("Silence gate (background hiss)\n");
+        // Steady mic hiss at -68 dBFS must not be amplified to an audible level,
+        // while speech-like sound 20 dB above it still is.
+        Processor p; p.prepare(kFs); p.setPlace(1); p.setVolume(5);
+        runNoise(p, -68.0f, 4.0f);
+        std::vector<float> in(kBlock, 0.0f), out(2 * kBlock);
+        uint32_t seed = 7; double acc = 0; int n = 0;
+        for (int b = 0; b < 500; ++b) {
+            for (int i = 0; i < kBlock; ++i) { seed = seed * 1664525u + 1013904223u;
+                in[i] = 0.00069f * ((seed >> 8) / 8388608.0f - 1.0f); }
+            p.process(in.data(), kBlock, out.data(), kBlock);
+            for (int i = 0; i < kBlock; ++i) { acc += out[2 * i] * out[2 * i]; ++n; }
+        }
+        float hissOut = linToDb(static_cast<float>(std::sqrt(acc / n)));
+        std::printf("        hiss at volume 5: %.1f dBFS out (floor measured %.0f dB)\n", hissOut, p.noiseFloorDb());
+        CHECK(hissOut < -50.0f, "background hiss stays quiet at full volume");
+        Voice v{150.0f, 600.0f, 1800.0f}; int clk = 0;
+        auto sp = runVoice(p, v, -45.0f, 1.0f, clk);
+        float spOut = linToDb(rms(sp, 0, 24000));
+        std::printf("        speech at -45 dBFS in: %.1f dBFS out\n", spOut);
+        CHECK(spOut > -25.0f, "speech above the hiss is still strongly amplified");
+    }
+
+    {
         std::printf("AI noise reduction delay\n");
         Processor p; p.prepare(kFs);
         p.setPlace(0); runSine(p, 1000, -40, 0.05f);
-        CHECK(p.extraLatencyFrames() == 0, "home: no extra delay");
+        CHECK(p.extraLatencyFrames() == 480, "home: AI noise removal on, 10 ms");
         p.setPlace(1); runSine(p, 1000, -40, 0.05f);
         CHECK(p.extraLatencyFrames() == 480, "talk: exactly 10 ms extra delay");
         p.setSaver(true); runSine(p, 1000, -40, 0.05f);
