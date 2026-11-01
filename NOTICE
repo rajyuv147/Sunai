@@ -1,0 +1,14 @@
+Sunai (सुनाइ) — offline, picture-first sound amplifier for Android
+Copyright 2026 The Sunai contributors
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product includes third-party software:
+
+- Oboe 1.9.3 — Copyright 2016 The Android Open Source Project.
+  Apache License 2.0. app/src/main/cpp/third_party/oboe/LICENSE
+- RNNoise 0.1.1 and 0.2 — Copyright 2017-2024 Jean-Marc Valin, Xiph.Org
+  Foundation, Mozilla Corporation and contributors.
+  BSD 3-Clause License. app/src/main/cpp/third_party/rnnoise*/COPYING
+  The RNNoise 0.2 model weights are downloaded at build time from
+  https://media.xiph.org/rnnoise/models/ under the same licence.

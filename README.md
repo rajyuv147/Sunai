@@ -12,6 +12,14 @@ the app cleans and balances the sound in real time, and sends it to the user's e
 - **Voice help** on every screen (Nepali first; Maithili, Bhojpuri, Tharu ready for recordings)
 - **Tiny**: no AndroidX, no analytics, no outside libraries; target APK size 3–5 MB
 
+## Download
+
+**[Download the latest APK](https://github.com/rajyuv147/Sunai/releases/latest)** (Android 8.1 or newer,
+about 3.5 MB). Open the file on the phone and allow "Install from this source".
+Current builds are signed with a test key; Play Protect may warn — tap "Install anyway".
+
+The app needs **earphones** (wired is best: almost no delay) and works **completely offline**.
+
 > Sunai is a listening helper, **not a medical device**. People with ear pain, discharge or
 > sudden hearing loss should visit a health post.
 
@@ -160,7 +168,15 @@ Example: `voice_mai_home.ogg`.
 - Recorded voice clips in all four languages
 - Adaptive notch filter for feedback, in addition to the howl guard
 
-## Licences
+## Contributing
+
+Contributions are welcome — code, voice recordings in local languages, testing on
+cheap phones, and feedback from audiologists. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Licence
+
+Sunai is open source under the [Apache License 2.0](LICENSE). Third-party
+components keep their own licences (see [NOTICE](NOTICE)):
 
 - Oboe — Apache License 2.0 (`app/src/main/cpp/third_party/oboe/LICENSE`)
-- RNNoise — BSD 3-Clause (`app/src/main/cpp/third_party/rnnoise/COPYING`)
+- RNNoise — BSD 3-Clause (`app/src/main/cpp/third_party/rnnoise*/COPYING`)
